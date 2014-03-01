@@ -12,13 +12,18 @@ class Measure_and_control():
         pass
 
     def launch(self, operating_devices, recorder,):
-        print "\n-Measure and control thread start"       
+        print "\n-Measure and control thread start"
+        
+        for device in operating_devices:
+            device_run = threading.Thread( target = device.run, args=(device, ) )
+            device_run.start()
+
+        start = time.time()       
         while True:
-            for device in operating_devices:
-                device_run = threading.Thread( target = device.run, args=(device, ) )
-                device_run.start()
-                time.sleep(sleep_time)                        
-            recorder.add_record(operating_devices)
+            
+            if time.time()-start > sleep_time:                      
+                recorder.add_record(operating_devices)
+                start = time.time()
 
 
 class Command():

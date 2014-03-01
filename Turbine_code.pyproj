@@ -18,11 +18,8 @@
     <Compile Include="Database_manage.py" />
     <Compile Include="File_reader.py" />
     <Compile Include="Start.py" />
-    <Compile Include="TabPlotsGUI.py" />
-    <Compile Include="ThreadGUI.py" />
     <Compile Include="Threads_Manager.py" />
     <Compile Include="Turbine.py" />
-    <Compile Include="WindowGUI.py" />
     <Compile Include="Write_turbine_tree.py" />
     <Compile Include="__init__.py" />
     <Content Include="DevicesMaps\input_devices_map.txt" />

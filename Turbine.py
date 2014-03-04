@@ -1,9 +1,5 @@
-import sys
-import random
 import math
 import time
-import random
-import threading
 from copy import deepcopy
     
 import Nikitta
@@ -41,41 +37,41 @@ class Measure_Device(Device):
         start = time.time()
 
         while True:
+
             try:
                 caller.convert
                 analog_measure_device = True
             except AttributeError:
                 analog_measure_device = False
-            
-            
-
+                                      
             if analog_measure_device:
-                voltage         =   d.read_AIN(self.channel)
-                self.value      =   round(caller.convert(voltage), 3)
-                sum_value = sum_value + self.value
-                sum_iter +=1
-
+                self.value         =   d.read_AIN(self.channel)
+                #self.value      =   caller.convert(voltage)
+                
             else:
-                self.value      =   round(caller.get_frequency(), 3)
-                value_table.append(self.value)
-                sum_value = sum_value + self.value
-                sum_iter +=1
+                self.value      =   caller.get_frequency()
+
+            sum_value = sum_value + self.value
+            sum_iter +=1
                 
             if time.time()-start > sleep_time:
-                mean_value =  sum_value/sum_iter
+
+                if analog_measure_device:
+                    self.value  =   caller.convert(self.value)
+
+                mean_value =  round(sum_value/sum_iter, 3)
                 sum_value = 0.
                 sum_iter = 0
-                                 
-                client.set_value(self.dir, 'value', self.value)
+                                               
+                client.set_value(self.dir, 'value', mean_value)
                 start = time.time()
-            
-         
+                     
 class Thermocouple(Measure_Device):
             
     def convert(self, voltage):
 
         if self.kind == 'K': return voltage#TCVoltsToTemp(6004, (voltage-1.4) , d.getTemperature())-273.15
-        if self.kind == 'M': return random.randint(1, 10)
+        if self.kind == 'M': return voltage
         else: return 0
                         
 class Flowmeter(Measure_Device):
@@ -157,7 +153,7 @@ class Gas_valve(Regulated_device):
         self.dir_port       =   channels[1]
         self.enable_port    =   channels[2]
 
-        self.cycle_time     =   1.05
+        self.cycle_time     =   1.05 # wyciagnac na zewnatrz
         
         self.enable( False )
 
@@ -181,12 +177,13 @@ class Gas_valve(Regulated_device):
         return self.position
 
     def set_valve(self, end_position):
-
+        # open loop
         """Sets valve for specific position"""
         end_position = int(end_position)
 
-        if end_position < 0 or end_position > 100 or self.position==end_position:
+        if end_position < 0 or end_position > 100:
             raise Exception("V-position must be set between 0 and 100")
+            #constrain 
               
         work_time = self.cycle_time*(float((math.fabs(end_position-self.position)))/100)
         print "V-work_time: ", work_time

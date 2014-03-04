@@ -17,7 +17,10 @@ class Measure_and_control():
         for device in operating_devices:
             device_run = threading.Thread( target = device.run, args=(device, ) )
             device_run.start()
+        
+        #self.record(recorder)
 
+    def record(self,):
         start = time.time()       
         while True:
             

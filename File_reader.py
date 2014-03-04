@@ -63,16 +63,18 @@ class Devices_creator():
 
                     data = data.split(',')
 
-                    if pointId not in self.turbine_tree_creator.points_list:
-                        self.turbine_tree_creator.points_list.append(pointId)
-                        self.turbine_tree_creator.type_names_dict[pointId] = []
-                    if data[0] not in self.turbine_tree_creator.type_names_dict[pointId]:
-                        self.turbine_tree_creator.type_names_dict[pointId].append(device_type)
-                    
                     device_attrs['point']       = int(pointId)
                     device_attrs['kind']        = data[0]  
                     device_attrs['channels']    = data[1:]
                     one_type_devices_attrs.append(deepcopy(device_attrs))  
+
+                    if pointId not in self.turbine_tree_creator.points_list:
+                        self.turbine_tree_creator.points_list.append(pointId)
+                        self.turbine_tree_creator.type_names_dict[pointId] = []
+                    if device_attrs['kind'] not in self.turbine_tree_creator.type_names_dict[pointId]:
+                        self.turbine_tree_creator.type_names_dict[pointId].append(device_type)
+                    
+
          
             devices_data[device_type] = one_type_devices_attrs
         
@@ -99,10 +101,10 @@ class Devices_creator():
         print "-Devices data from file: \n{0}".format(devices_data) 
         print "\n-Devices to launch:\n{0}\n{1}\n\n".format(device_instances, '*'*len(self.test_string) )
         operating_devices = []                
-        for device in device_instances:                             ### This code may be redundant             
-            if device_instances[device] != []:
-                for deviceId in range( len(device_instances[device] ) ):
-                    operating_device = device_instances[device][deviceId]
+        for devices in device_instances:                             ### This code may be redundant             
+            if device_instances[devices] != []:
+                for operating_device in device_instances[devices]:
+ 
                     operating_devices.append( operating_device )
         return operating_devices
 

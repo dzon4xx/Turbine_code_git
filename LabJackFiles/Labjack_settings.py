@@ -34,7 +34,7 @@ class LabJack(labjack_class):
                 AddRequest(self.d.handle, LJ_ioPUT_TIMER_MODE, 0, LJ_tmPWM8, 0, 0) 
                 AddRequest(self.d.handle, LJ_ioPUT_TIMER_VALUE, 0, 31777, 0, 0)
             except TypeError as e:
-                print "-Labjack: [{e}] occured becasue Valve ports are not set in mpa file".format(**locals())
+                print "-Labjack: [{e}] occured becasue Valve ports are not set in map file".format(**locals())
 
             
             try:
@@ -43,7 +43,7 @@ class LabJack(labjack_class):
                     AddRequest(self.d.handle, LJ_ioPUT_COUNTER_RESET, port - self.offset, 1, 0, 0)
 
             except TypeError as e:
-                print "-Labjack: [{e}] occured becasue Counter ports are not set in mpa file".format(**locals())
+                print "-Labjack: [{e}] occured becasue Counter ports are not set in map file".format(**locals())
             
             GoOne(self.d.handle)
 

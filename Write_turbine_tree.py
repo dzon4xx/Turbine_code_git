@@ -17,9 +17,9 @@ class Turbine_tree_creator():
         for point_number in self.points_list:
             points_dict['P'+str(point_number)] = self.point_tree(point_number)
         
-        print "-database tree created:"
-        client.pretty_print(points_dict)
-        print "\n"
+        #print "-database tree created:"
+        #client.pretty_print(points_dict)
+        #print "\n"
         client.create_tree(self.__main_interface_dir, points_dict)
         client.create_tree(self.__history_interface_dir, points_dict)
 

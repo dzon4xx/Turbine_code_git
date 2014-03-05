@@ -14,10 +14,11 @@ class Measure_and_control():
     def launch(self, operating_devices, recorder,):
         print "\n-Measure and control thread start"
         
+       
         for device in operating_devices:
             device_run = threading.Thread( target = device.run, args=(device, ) )
             device_run.start()
-        
+            
         #self.record(recorder)
 
     def record(self,):

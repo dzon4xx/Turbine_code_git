@@ -7,22 +7,24 @@ from copy import deepcopy
     
 import Nikitta
 
-from LabJackFiles.Labjack_settings import LabJack
-from LabJackFiles.LabJackPython import TCVoltsToTemp
-from __init__ import *
+from Labjack_settings import LabJack
 
+from LabJackFiles.LabJackPython import TCVoltsToTemp, LJ_ttK 
+from __init__ import *
 
 d = LabJack()
 
 class Device(object):
 
-    def __init__(self, type, point, kind, channels, dir ):
+    def __init__(self, device_attrs ):
 
-        self.type           =   type
-        self.point          =   point
-        self.kind           =   kind
-        self.channel        =   channels[0]             
-        self.device_type    =   dir[-1]     
+        self.id             =   device_attrs[ID]
+        self.point          =   device_attrs[POINT]
+        self.name           =   device_attrs[NAME]
+        self.direction      =   device_attrs[DIRECTION]
+        self.type           =   device_attrs[TYPE]
+        self.kind           =   device_attrs[KIND]
+        dir                 =   ['Turbine', 'Points', 'P'+str(self.point), self.name] 
         self.dir            =   client.get_dir(dir)
 
         self.history_dir    =   None
@@ -30,11 +32,20 @@ class Device(object):
         self.record_id      =   0
         self.value          =   client.get_attr( self.dir, 'value' ) 
 
-    def show(self):        
-        print "kind {2} value: {1} point: {0} channel: {3}  \n".format(self.point, self.value, self.kind, self.channel )
-
+    def show(self, value):        
+        print "kind {2} value: {1} point: {0} channel: {3}  \n".format(self.point, value, self.kind, self.channel )
 
 class Measure_Device(Device):
+
+    def __init__(self, device_attrs):
+        Device.__init__(self, device_attrs)
+        self.channel    =   device_attrs[CHANNELS][AIN]
+        try:
+            char            =   device_attrs[CHARACTERISTIC]
+            self.convert    =   self.interpol_char(char)
+        except KeyError:
+            if self.kind == 'K': 
+                self.convert    =   self.thermo_conv()
 
     def run(self, caller):
 
@@ -42,9 +53,12 @@ class Measure_Device(Device):
         sum_iter = 0
         start = time.time()
 
+        if caller.type == ANALOG:
+            analog_measure_device = True
+        else:
+            analog_measure_device = False
+             
         while True:
-
-            analog_measure_device = self.check_caller_type(caller)
                                       
             if analog_measure_device:
                 self.value          =   d.read_AIN(self.channel)                
@@ -52,7 +66,7 @@ class Measure_Device(Device):
                 self.value          =   caller.get_frequency()
 
             sum_value = sum_value + self.value
-            sum_iter +=1
+            sum_iter += 1
             time.sleep(avarage_time)    
 
             if time.time()-start > sleep_time:
@@ -63,80 +77,42 @@ class Measure_Device(Device):
                     conv_mean_value  =   caller.convert(mean_value)
 
                 conv_mean_value =   round(conv_mean_value, 3)
-                #self.show()
+                self.show(conv_mean_value )
                 sum_value = 0.
                 sum_iter = 0
                                                              
                 client.set_value(self.dir, 'value', conv_mean_value)
                 start = time.time()
-       
-    def check_caller_type(self, caller):
 
-        if hasattr( caller, 'convert'):               
-            analog_measure_device = True
-        else:
-            analog_measure_device = False
-            
-        return analog_measure_device
-                  
-class Thermocouple(Measure_Device):
+    def interpol_char(self, char):
 
-    def __init__(self, type, point, kind, channels, dir, char):
-        Device.__init__(self, type, point, kind, channels, dir)
-        self.gen_conv_fun()
-            
-    def gen_conv_fun(self, ):
+        x = np.array(char.x) 
+        y = np.array(char.y)
 
-        if self.kind == 'K': self.convert = lambda voltage: voltage#TCVoltsToTemp(6004, (voltage-1.4) , d.getTemperature())-273.15
-        if self.kind == 'M': self.convert = lambda voltage: 0
+        if len(char.x) == 2:
+            interpol_fun =  interpolate.interp1d(x, y, kind='linear')
+        if len(char.x) > 2 and len(char.x) < 6:
+            k = len(char.x)-1
+            interpol_fun = interpolate.InterpolatedUnivariateSpline(x, y, k)
+        if len(char.x) > 6:
+            k = 5                       
+            interpol_fun = interpolate.InterpolatedUnivariateSpline(x, y)
 
-                        
-class Flowmeter(Measure_Device):
-    
-    def __init__(self, type, point, kind, channels, dir, char):
-        Device.__init__(self, type, point, kind, channels, dir)
-        self.gen_conv_fun()
+        return interpol_fun
 
-            
-    def gen_conv_fun(self, ):
-
-        if self.kind == 'gas': self.convert = lambda voltage: 0
-        if self.kind == 'air': 
-            y = np.array([8, 10, 15, 30, 60, 120, 250, 370, 480])           
-            x = np.array([1.2390, 1.3644, 1.5241, 1.8748, 2.3710, 2.9998, 3.7494, 4.1695, 4.4578])
-            self.convert = interpolate.InterpolatedUnivariateSpline(x, y)
-
-class Manometer(Measure_Device):
-    
-    def __init__(self, type, point, kind, channels, dir, char):
-        Device.__init__(self, type, point, kind, channels, dir)
-        self.gen_conv_fun(char)
-            
-    def gen_conv_fun(self, char):
-
-        if self.kind == 'I':
-            x = np.array(char.x) 
-            y = np.array(char.y)                       
-            self.convert = interpolate.interp1d(x, y, kind='linear')
+    def thermo_conv(self):
+        voltage = 0
+        def convert(voltage):               
+            return TCVoltsToTemp(LJ_ttK, voltage , 294)-273.15
 
                     
-        elif self.kind == 'B': self.convert = lambda voltage: 0
-
-
-class Exhaust_sensor(Measure_Device):
-            
-    def convert(self, voltage):
-
-        if self.kind == 'E': return voltage#TCVoltsToTemp(6004, (voltage-1.4) , d.getTemperature())-273.15
-        else: return 0
-
 class Rev_counter(Measure_Device):
 
-    def __init__(self, type, point, kind, channels, dir):
+    def __init__(self, device_attrs):
 
-        Measure_Device.__init__(self, point, kind, channels, dir)
-        self.channel = channels[0]
-        d.counters_port.append(channels[0])
+        Measure_Device.__init__(self, device_attrs)
+        self.channel    =   device_attrs[CHANNELS]
+        d.counters_port.append(self.channel)
 
         self.frequency  =   deepcopy(self.value)
 
@@ -155,8 +131,7 @@ class Rev_counter(Measure_Device):
         d.reset_counter(self.channel)
         self.count = 0 
         
-          
-     
+              
 class Control_device(Device):
     'Class defining run method of controled devices'
     def run(self, caller):
@@ -165,12 +140,11 @@ class Control_device(Device):
             if new_value != self.value:
                 caller.set_value(new_value, caller)
                 self.value = new_value  
-                      
-       
+                            
 class Regulated_device(Control_device):
     'Class defining atribute position for regulated devices. Handles apropriate method for setting value based on who is caller'
-    def __init__(self, type, point, kind, channels, dir):
-        Device.__init__(self, type, point, kind, channels, dir)
+    def __init__(self, device_attrs):
+        Device.__init__(self, device_attrs)
         self.position       =   deepcopy(self.value)
 
     def set_value(self, new_value, caller):
@@ -179,13 +153,12 @@ class Regulated_device(Control_device):
 
 class Gas_valve(Regulated_device):
     
-    def __init__(self, type, point, kind, channels, dir):
-        Regulated_device.__init__(self, point, kind, channels, dir)
+    def __init__(self, device_attrs):
+        Regulated_device.__init__(self, device_attrs)
 
-        self.clock_port     =   channels[0]
-        d.valve_pulse_port  =   channels[0]
-        self.dir_port       =   channels[1]
-        self.enable_port    =   channels[2]
+        self.clock_port     =   device_attrs[CHANNELS][DIO][0]
+        self.dir_port       =   device_attrs[CHANNELS][DIO][1]
+        self.enable_port    =   device_attrs[CHANNELS][DIO][2]
 
         self.cycle_time     =   1.05 # wyciagnac na zewnatrz
         
@@ -236,16 +209,63 @@ class Gas_valve(Regulated_device):
         self.position   =   end_position
                            
 class Throttle(Regulated_device):
-    pass
+
+       def __init__(self, d, angle_channel, freq, pwm_mode):
+
+            self.freq           =     float(freq)
+            self.angle_channel  =     angle_channel   
+            self.angle          =     self.voltage_to_angle(d.readRegister(self.angle_channel))
+            self.baseValue      =     65535
+            self.pwm_mode       =     pwm_mode
+            self.d              =     d
+            self.set_labjack(d )
+
+
+       def voltage_to_angle(self, voltage):
+ 
+            angle_max   =   90
+            voltage_max =   4.3
+
+            angle    =   float(voltage/voltage_max)*angle_max
+            return angle
 
 class Wastegate(Regulated_device):
-    pass
+
+        def __init__(self, d):
+
+            self.baseValue      =     65535
+            self.freq           =     325.516 # from osciloskope
+
+            #self.PWM_zero      =     0.0015*self.freq*self.baseValue
+            self.PWM_minus45    =   0.001*self.freq*self.baseValue
+            self.PWM_plus45     =   0.002*self.freq*self.baseValue
+            self.min_angle      =   -90
+            self.max_angle      =   +90
+     
+            self.position       =     0
+     
+            self.d              =     d
+            self.set_labjack( d )
+
+        def set_angle(self, d, angle):
+
+            if angle < self.min_angle or angle > self.max_angle:
+                print "Angle must be between -45deg and 45deg"
+                raise ValueError
+
+            else:
+
+                PWM = self.baseValue - (self.PWM_minus45 + ((self.PWM_plus45-self.PWM_minus45)/(self.max_angle-self.min_angle))*(angle-self.min_angle))
+                    
+                AddRequest(d.handle, LJ_ioPUT_TIMER_VALUE, 0, PWM, 0, 0)  
+                GoOne(d.handle)
+                return PWM
 
 
 class Switch_device(Control_device):
     'Class defining atribute state for Switch devices. Handles change of state'
-    def __init__(self, type, point, kind, channels, dir,):
-        Device.__init__(self, type, point, kind, channels, dir,)
+    def __init__(self, device_attrs,):
+        Device.__init__(self, device_attrs,)
         self.state  =   deepcopy(self.value)
 
     def set_value(self, new_state, caller):
@@ -254,11 +274,6 @@ class Switch_device(Control_device):
 
         print "-new state of {0} is {1}".format(caller.kind, new_state)
                                                
-class Oil_pump(Switch_device):
-    pass
-
-class Ignition(Switch_device):
-    pass
 
 
 

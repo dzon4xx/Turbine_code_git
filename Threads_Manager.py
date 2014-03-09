@@ -15,7 +15,7 @@ class Measure_and_control():
         print "\n-Measure and control thread start"
         
        
-        for device in operating_devices:
+        for device in operating_devices:           
             device_run = threading.Thread( target = device.run, args=(device, ) )
             device_run.start()
             

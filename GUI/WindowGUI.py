@@ -269,6 +269,7 @@ class Form(QDialog):
         self.timer_auto.blockSignals(True)
         
     def StopButton (self):
+
         self.timer_auto.blockSignals(True)
         self.dict_switch['switch_1'].switch.setChecked(True)
         self.dict_switch['switch_2'].switch.setChecked(True)

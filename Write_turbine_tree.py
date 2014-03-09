@@ -9,7 +9,7 @@ class Turbine_tree_creator():
         self.__history_interface_dir    = client.reset_subdir(client.get_dir(["Turbine", "History"]), "Points")
 
         self.points_list = [] 
-        self.type_names_dict = {}
+        self.names_dict = {}
 
     def create_tree(self):
 
@@ -26,7 +26,7 @@ class Turbine_tree_creator():
     def point_tree(self, point_number):
 
         point_attr = {}
-        for value_name in self.type_names_dict[point_number]:
+        for value_name in self.names_dict[point_number]:
             point_attr[value_name] = self.attr_value()
 
         return point_attr

@@ -15,7 +15,7 @@ import threading
 import sys
 import imp
 
-from __init__ import *
+from __init__ import devices_data, kinds_list, DEVICES_FILE_PATH, DEVICES_CHAR_PATH 
 
 import Threads_Manager
 import File_reader
@@ -29,38 +29,24 @@ class Start():
 
     def Get_devices_to_launch( self ):
 
-        DEVICES_FILE_PATH           = "DevicesMaps\devices_map.txt"
+        VALVE, THROTTLE, SERVO, RELAY, POTENTIOMETER, REV_COUNTER, FLOWMETER, THERMOMETER,  MANOMETER, EXHAUST_SENSOR =  kinds_list
 
-        devices_data      = {       'THERMOMETER': [], 
-                                    'MANOMETER': [], 
-                                    'FLOWMETER': [], 
-                                    'REV_COUNTER': [], 
-                                    'EXHAUST_SENSOR': [],           
-                                    'VALVE': [], 
-                                    'THROTTLE': [], 
-                                    'IGNITION': [] , 
-                                    'STARTER_FAN': [] , 
-                                    'WASTEGATE': [],
-                                    'OIL_PUMP': [], 
-                            }
+        classes_map     = { THERMOMETER :Turbine.Measure_Device, 
+                            MANOMETER: Turbine.Measure_Device, 
+                            FLOWMETER: Turbine.Measure_Device, 
+                            REV_COUNTER: Turbine.Rev_counter, 
+                            EXHAUST_SENSOR: Turbine.Measure_Device,        
+                            VALVE : Turbine.Gas_valve, 
+                            THROTTLE: Turbine.Throttle, 
+                            RELAY:Turbine.Switch_device, 
+                            SERVO: Turbine.Wastegate,
+                            POTENTIOMETER: Turbine.Starter_fan  
+                            } 
+                       
+        Devices_creator =   File_reader.Devices_creator()
+        loaded_devices_data, devices_instances  = Devices_creator.prepare_devices_to_launch( DEVICES_FILE_PATH, DEVICES_CHAR_PATH, devices_data, classes_map )
 
-        classes_map         = {     'THERMOMETER' :Turbine.Measure_Device, 
-                                    'MANOMETER': Turbine.Measure_Device, 
-                                    'FLOWMETER': Turbine.Measure_Device, 
-                                    'REV_COUNTER': Turbine.Rev_counter, 
-                                    'EXHAUST_SENSOR': Turbine.Measure_Device,        
-                                    'VALVE' : Turbine.Gas_valve, 
-                                    'THROTTLE': Turbine.Throttle, 
-                                    'IGNITION':Turbine.Switch_device, 
-                                    'WASTEGATE': Turbine.Wastegate, 
-                                    'OIL_PUMP': Turbine.Switch_device,  
-                                }                
-
-        Devices_creator =   File_reader.Devices_creator(DEVICES_FILE_PATH,)
-
-        devices_data, devices_instances  = Devices_creator.prepare_devices_to_launch( devices_data, classes_map )
-
-        Turbine.d.set_labjack(devices_data)
+        Turbine.d.set_labjack(loaded_devices_data)
         return devices_instances
 
     def Start_threads( self, devices_instances, recorder ):

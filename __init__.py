@@ -1,46 +1,40 @@
 # -*- coding: utf-8 -*-
 from Nikitta import SiloReaderWriter
 
-file_handle     = open( "DevicesMaps\devices_map.txt" )
-attributes      = file_handle.readline().split()
-file_handle.close()
- 
-ID                  = attributes[0]
-POINT	            = attributes[1] 
-NAME	            = attributes[2]
-DIRECTION	        = attributes[3]
-TYPE	            = attributes[4]
-KIND	            = attributes[5]
-CHANNELS	        = attributes[6]
-CHANNELS_DESCRIPTION= attributes[7]
-SETTINGS            = attributes[8]
-CHARACTERISTIC      = attributes[9]
-#channels types
-DIO =   'dio'
-AIN =   'ain'
-DAC =   'dac'
-TIO =   'tio'
-CIO =   'cio'
-#devices types
-DIGITAL_PULSE = 'digital_pulse'
-DIGITAL       = 'digital'
-ANALOG        = 'ANALOG'
+DEVICES_FILE_PATH           = "DevicesMaps\devices_map.txt"
+DEVICES_CHAR_PATH           = "DevicesMaps\devices_characteristics.txt"
 
+file_handle     = open( DEVICES_FILE_PATH )
+ATTRIBUTES      = file_handle.readline().split()
+file_handle.close()
+
+#devices attributes
+ID, ENABLE, POINT, NAME, DIRECTION, TYPE, KIND, CHANNELS, CHANNELS_DESCRIPTION, SETTINGS, CHARACTERISTIC = ATTRIBUTES     
+
+
+#Devices kinds
+kinds_list = ['VALVE', 'THROTTLE', 'SERVO', 'RELAY', 'POTENTIOMETER', 'REV_COUNTER', 'FLOWMETER', 'THERMOMETER', 'MANOMETER', 'EXHAUST_SENSOR']
+VALVE, THROTTLE, SERVO, RELAY, POTENTIOMETER, REV_COUNTER, FLOWMETER, THERMOMETER,  MANOMETER, EXHAUST_SENSOR =  kinds_list 
+ 
+devices_data = { kind: [] for kind in kinds_list }
 #Devices names
-REV_COUNTER   = 'rev_counter'
+
+devices_names_list = ["GAS_VALVE", "WASTEGATE", "MAIN_THROTTLE", "AUXILARY_THROTTLE", "STARTER_FAN", "IGNITION", "OIL_PUMP", "REV_COUNTER_1ST", "REV_COUNTER_2ND", "FLOWMETER_AIR", "FLOWMETER_GAS", "MANOMETER_INTROL", "MANOMETER_BOTLAND", "THERMOCOUPLE_K", "LABJACK_TEMP_SENSOR",]
+GAS_VALVE, WASTEGATE, MAIN_THROTTLE, AUXILARY_THROTTLE, STARTER_FAN, IGNITION, OIL_PUMP, REV_COUNTER_1ST, REV_COUNTER_2ND, FLOWMETER_AIR, FLOWMETER_GAS, MANOMETER_INTROL, MANOMETER_BOTLAND, THERMOCOUPLE_K, LABJACK_TEMP_SENSOR = devices_names_list	
+
+    
+
+
+#channels types
+DIO, AIN, DAC, TIO, CIO, NOT = ['DIO', 'AIN', 'DAC', 'TIO', 'CIO', 'NOT']
+#devices types
+DIGITAL_PULSE, DIGITAL, ANALOG = ['DIGITAL_PULSE', 'DIGITAL', 'ANALOG']
 
 #Settings
-DIV     = 'div'
-BASE    = 'base'
-MODE    = 'mode'
-VALUE   = 'value'
-RES     = 'res'
-RANGE   = 'range'
+MODE, VALUE, VOFFSET, GAIN, SAVE_TIME     =  'mode', 'value', 'voffset', 'gain', 'save_time'
+
    
-
-
-
-MAX_CHANNEL = {DIO: 22, AIN: 13, DAC: 2, TIO: 7, CIO: 2}
+MAX_CHANNEL = {DIO: 22, AIN: 13, DAC: 2, TIO: 7, CIO: 2, NOT: 1}
 
 
 

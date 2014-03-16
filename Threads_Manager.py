@@ -13,10 +13,9 @@ class Measure_and_control():
 
     def launch(self, operating_devices, recorder,):
         print "\n-Measure and control thread start"
-        
-       
+               
         for device in operating_devices:           
-            device_run = threading.Thread( target = device.run, args=(device, ) )
+            device_run = threading.Thread( target = device.run, args=( ) )
             device_run.start()
             
         #self.record(recorder)
@@ -28,7 +27,6 @@ class Measure_and_control():
             if time.time()-start > sleep_time:                      
                 recorder.add_record(operating_devices)
                 start = time.time()
-
 
 class Command():
     """ Finally the aim of the class will be to interface with GUI """

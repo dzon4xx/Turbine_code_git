@@ -17,9 +17,6 @@ class Turbine_tree_creator():
         for point_number in self.points_list:
             points_dict['P'+str(point_number)] = self.point_tree(point_number)
         
-        #print "-database tree created:"
-        #client.pretty_print(points_dict)
-        #print "\n"
         client.create_tree(self.__main_interface_dir, points_dict)
         client.create_tree(self.__history_interface_dir, points_dict)
 
@@ -34,7 +31,7 @@ class Turbine_tree_creator():
     def attr_value(self):
 
         value_dict = {}
-        value_dict["value"] = 1.  # SPENT 1 HOUR ON MISTAKE HERE. VALUE MUST BE DOUBLE!!!!
+        value_dict["value"] = 0.  # SPENT 1 HOUR ON MISTAKE HERE. VALUE MUST BE DOUBLE!!!!
         return value_dict
 
 

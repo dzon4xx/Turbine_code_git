@@ -3,22 +3,21 @@ from __init__ import *
 class Turbine_tree_creator():
 
     def __init__(self):
-
-
-        self.__main_interface_dir       = client.reset_subdir(client.get_dir(["Turbine"]), "Points")
-        self.__history_interface_dir    = client.reset_subdir(client.get_dir(["Turbine", "History"]), "Points")
-
+       
         self.points_list = [] 
         self.names_dict = {}
 
     def create_tree(self):
+
+        main_interface_dir       = client.reset_subdir(client.get_dir(["Turbine"]), "Points")
+        #self.__history_interface_dir    = client.reset_subdir(client.get_dir(["Turbine", "History"]), "Points")
 
         points_dict = {}
         for point_number in self.points_list:
             points_dict['P'+str(point_number)] = self.point_tree(point_number)
         
         client.create_tree(self.__main_interface_dir, points_dict)
-        client.create_tree(self.__history_interface_dir, points_dict)
+        #client.create_tree(self.__history_interface_dir, points_dict)
 
     def point_tree(self, point_number):
 

@@ -15,7 +15,7 @@ import threading
 import sys
 import imp
 
-from __init__ import devices_data, kinds_list, DEVICES_FILE_PATH, DEVICES_CHAR_PATH 
+from __init__ import debug, devices_data, kinds_list, DEVICES_FILE_PATH, DEVICES_CHAR_PATH 
 
 import Threads_Manager
 import File_reader
@@ -29,33 +29,36 @@ class Start():
 
     def Get_devices_to_launch( self ):
 
-        VALVE, THROTTLE, SERVO, RELAY, POTENTIOMETER, REV_COUNTER, FLOWMETER, THERMOMETER,  MANOMETER, EXHAUST_SENSOR =  kinds_list
+        VALVE, THROTTLE, SERVO, RELAY, POTENTIOMETER, REV_COUNTER, FLOWMETER, THERMOMETER,  MANOMETER, EXHAUST_SENSOR, CURRENT_METER, VOLTAGE_METER, FREQUENCY_METER =  kinds_list
 
         classes_map     = { THERMOMETER :Turbine.Measure_Device, 
                             MANOMETER: Turbine.Measure_Device, 
                             FLOWMETER: Turbine.Measure_Device, 
                             REV_COUNTER: Turbine.Rev_counter, 
-                            EXHAUST_SENSOR: Turbine.Measure_Device,        
+                            EXHAUST_SENSOR: Turbine.Measure_Device,
+                            CURRENT_METER: Turbine.Measure_Device,
+                            VOLTAGE_METER: Turbine.Measure_Device,
+                            FREQUENCY_METER: Turbine.Measure_Device,        
                             VALVE : Turbine.Gas_valve, 
                             THROTTLE: Turbine.Throttle, 
                             RELAY:Turbine.Switch_device, 
                             SERVO: Turbine.Wastegate,
                             POTENTIOMETER: Turbine.Starter_fan  
                             } 
-                       
+                    
         Devices_creator =   File_reader.Devices_creator()
         loaded_devices_data, devices_instances  = Devices_creator.prepare_devices_to_launch( DEVICES_FILE_PATH, DEVICES_CHAR_PATH, devices_data, classes_map )
 
         Turbine.d.set_labjack(loaded_devices_data)
         return devices_instances
 
-    def Start_threads( self, devices_instances, recorder ):
+    def Start_threads( self, devices_instances, recorder, exporter):
 
         launcher    = Threads_Manager.Measure_and_control()
         commander   = Threads_Manager.Command()
 
         measure_control_thread  =   threading.Thread(target = launcher.launch, args=(operating_devices, recorder, ) )
-        #command_thread          =   threading.Thread(target = commander.simple_command, args=(exporter, )) # LAter on we can add start commands
+        command_thread          =   threading.Thread(target = commander.simple_command, args=(exporter, )) # LAter on we can add start commands
        
         measure_control_thread.start()      
         #command_thread.start()
@@ -64,9 +67,9 @@ class Start():
 starter = Start()
 operating_devices = starter.Get_devices_to_launch()
 recorder = Database_manage.Record() 
-#exporter = Database_manage.Export( ["Turbine", "History"], operating_devices )   # sending history start_dir_list
+exporter = Database_manage.Export( ["Turbine", "History"], operating_devices )   # sending history start_dir_list
 
-starter.Start_threads( operating_devices, recorder )
+starter.Start_threads( operating_devices, recorder, exporter)
 
 
 

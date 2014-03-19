@@ -12,21 +12,15 @@ class Measure_and_control():
         pass
 
     def launch(self, operating_devices, recorder,):
-        print "\n-Measure and control thread start"
+        print "MEASURE_AND_CONTROL: START"
                
         for device in operating_devices:           
             device_run = threading.Thread( target = device.run, args=( ) )
             device_run.start()
             
-        #self.record(recorder)
+        record_thread = threading.Thread( target = recorder.record, args= (operating_devices, ) )
+        #record_thread.start()
 
-    def record(self,):
-        start = time.time()       
-        while True:
-            
-            if time.time()-start > sleep_time:                      
-                recorder.add_record(operating_devices)
-                start = time.time()
 
 class Command():
     """ Finally the aim of the class will be to interface with GUI """
@@ -34,7 +28,7 @@ class Command():
         self.name = "Command Thread: "
                                        
     def simple_command( self, exporter ):
-        print "-Command thread start"
+        print "-COMMAND: START"
         
         ### na razie ustawiamy na sztywno ktore punkty zapisujemy.
         export_points_list = ['0', '1', '2', '3', '4'] 

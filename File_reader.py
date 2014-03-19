@@ -5,19 +5,15 @@ import Write_turbine_tree
 from __init__ import *
 
 
-#class Characteristic():
-
-#    def __init__
-
-
 class Devices_creator():
 
     def __init__(self,):
 
-        self.name   =   "File_Reader"
+        self.name   =   "File_Reader"       
         self.turbine_tree_creator = Write_turbine_tree.Turbine_tree_creator()
-             
-    def prepare_devices_to_launch(self, devices_file_path, devices_char_path, devices_data, classes_map ):
+            
+
+    def prepare_devices_to_launch(self, devices_file_path, devices_char_path, devices_data, classes_map, create_db=False ):
 
         def open_file( rel_path, mode= 'r'):
     
@@ -53,12 +49,13 @@ class Devices_creator():
                 tab_line = line.split() 
                 if tab_line == []:
                     continue
-                elif tab_line[0] == '&':                   
+                elif tab_line[0] == '&':
+                                      
                     if raw_char:
                         char = characteristic(raw_char)
                         characteristics[ident] = char
                     raw_char = {}
-                    ident, point, name  =   tab_line[1:]
+                    ident, point, name  =   tab_line[1:] 
                     
                 else:
                     cord = tab_line[0]
@@ -71,22 +68,22 @@ class Devices_creator():
 
         def load_data(devices_file_path, devices_data, characteristics):
 
-            def prepare_channels(device_attrs, device_kind):
+            def prepare_channels(device_attrs, device_name):
 
                 def get_type_and_num(channel):
 
                     try:
                         channel_type = channel[:3]
                         if channel_type not in MAX_CHANNEL.keys():
-                            print "Invalid channel type for device ID:{0} {1}".format(ident, device_kind)
+                            print "Invalid channel type for device ID:{0} {1}".format(ident, device_name)
                             raise TypeError 
 
                         channel_number =  int(channel[3:])       
                         if channel_number not in range(0, MAX_CHANNEL[channel_type]):      
-                            print "Invalid channel number for device ID:{0} {1}. It must be between 0 and {2}".format(ident, device_kind, MAX_CHANNEL[channel_type])
+                            print "Invalid channel number for device ID:{0} {1}. It must be between 0 and {2}".format(ident, device_name, MAX_CHANNEL[channel_type])
                             raise TypeError 
                     except:
-                        print "-FILE READER: Cannot read channel: {0} for device: ID:{1}-{2}".format(channel, ident, device_kind)
+                        print "-FILE READER: Cannot read channel: {0} for device: ID:{1}-{2}".format(channel, ident, device_name)
 
                     return channel_type, channel_number
 
@@ -109,7 +106,7 @@ class Devices_creator():
 
                 return channels_dict
 
-            def prepare_char(device_attrs, device_kind):
+            def prepare_char(device_attrs, device_name):
            
                 ident       = device_attrs[ID]
 
@@ -121,7 +118,7 @@ class Devices_creator():
                 prep_char.x = [float(x) for x in char[0].split(',')]
                 prep_char.y = [float(y) for y in char[1].split(',')]
 
-                assert len(prep_char.x) == len(prep_char.y), 'Characteristic for ID:{0}-{1} not loaded because lenght of X and Y vectors not equal'.format(ident, device_kind)
+                assert len(prep_char.x) == len(prep_char.y), 'Characteristic for ID:{0}-{1} not loaded because lenght of X and Y vectors not equal'.format(ident, device_name)
 
 
                 return prep_char
@@ -151,13 +148,13 @@ class Devices_creator():
 
                 return device_attrs
 
-            def append_database(pointId, device_kind):
+            def append_database(pointId, device_name):
 
                 if pointId not in self.turbine_tree_creator.points_list:
                     self.turbine_tree_creator.points_list.append(pointId)
                     self.turbine_tree_creator.names_dict[pointId] = []
-                if device_kind not in self.turbine_tree_creator.names_dict[pointId]:
-                    self.turbine_tree_creator.names_dict[pointId].append(device_kind)
+                if device_name not in self.turbine_tree_creator.names_dict[pointId]:
+                    self.turbine_tree_creator.names_dict[pointId].append(device_name)
                     
             device_file = open_file(devices_file_path)
             for line in device_file:               # unpacks one line in file
@@ -172,10 +169,11 @@ class Devices_creator():
                 if device_attrs[ENABLE] == 0:
                     continue
                             
+                device_name = device_attrs[NAME]
                 device_kind = device_attrs[KIND]
                 pointId     = device_attrs[POINT]
 
-                channels    = prepare_channels(device_attrs, device_kind) 
+                channels    = prepare_channels(device_attrs, device_name) 
                 device_attrs[CHANNELS] = channels 
              
                 if device_attrs[CHARACTERISTIC]==1:
@@ -184,10 +182,10 @@ class Devices_creator():
                     device_attrs[CHARACTERISTIC] = char
 
                 if device_attrs.has_key(SETTINGS):
-                    setting     = prepare_settings(device_attrs, device_kind)
+                    setting     = prepare_settings(device_attrs, device_name)
                     device_attrs[SETTINGS] = setting 
                         
-                append_database(pointId, device_kind)
+                append_database(pointId, device_name)
                 devices_data[device_kind].append(device_attrs)
                           
             device_file.close()
@@ -205,9 +203,11 @@ class Devices_creator():
         def create_database():       
                 self.turbine_tree_creator.create_tree()
 
+        print "start"
         characteristics             = load_characteristics(devices_char_path, )
         devices_data                = load_data(devices_file_path, devices_data, characteristics)
-        create_database()
+        if create_db:
+            create_database()
         operating_devices_list      = map_devices_objects(devices_data, classes_map)
                        
         return devices_data, operating_devices_list # list which are empty are not initialized

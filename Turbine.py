@@ -23,11 +23,11 @@ class Device(object):
         self.direction      =   device_attrs[DIRECTION]
         self.type           =   device_attrs[TYPE]
         self.kind           =   device_attrs[KIND]
-        dir                 =   ['Turbine', 'Points', 'P'+str(self.point), self.kind] 
+        dir                 =   ['Turbine', 'Points', 'P'+str(self.point), self.name] 
         self.dir            =   client.get_dir(dir)
 
-        self.history_dir    =   None
-
+        self.history_dir    =   client.get_dir(['Turbine', 'History', 'Points', 'P'+str(self.point), self.kind])
+        
         self.record_id      =   0
         self.value          =   client.get_attr( self.dir, 'value' ) 
 
@@ -121,9 +121,9 @@ class Measure_Device(Device):
         convert    = get_convert_function(self.device_attrs)
         sum_value = 0.
         sum_iter = 0
-        start = time.time()
         save_time    = float(self.device_attrs[SETTINGS][SAVE_TIME])    
-             
+        start = time.time()
+                   
         while True:                       
             sum_value, sum_iter = sum_readings(sum_value, sum_iter)
 
@@ -136,7 +136,7 @@ class Measure_Device(Device):
                 sum_value = 0.
                 sum_iter = 0
                                                              
-                client.set_value(self.dir, 'value', mean_value)
+                client.set_value(self.dir, 'value', conv_mean_value)
                 start = time.time()
                     
 class Rev_counter(Measure_Device):

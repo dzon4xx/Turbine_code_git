@@ -17,13 +17,20 @@ class Record():
             client.add_attr_and_set_value(device.history_dir, str(device.record_id), device.value  )
             device.record_id = device.record_id + 1
 
+    def record(self, operating_devices):
+        start = time.time()       
+        while True:            
+            if time.time()-start > sleep_time:                      
+                self.add_record(operating_devices)
+                start = time.time()
+
 class History():
     """ Creates device history dir in Nikitta Database """
 
     def __init__(self, start_dir_list, operating_devices):
         
         self.history_dir, self.history_dir_list  = self.__get_datetime_dir(start_dir_list)
-        self.create_devices_history_dir(operating_devices)  
+        #self.create_devices_history_dir(operating_devices)  
 
     def create_devices_history_dir(self, operating_devices):
         """Creates device.history_dir atribute which is path to device's history catalog """

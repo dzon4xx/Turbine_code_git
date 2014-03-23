@@ -16,7 +16,7 @@
   <PropertyGroup Condition="'$(Configuration)' == 'Release'" />
   <ItemGroup>
     <Compile Include="Database_manage.py" />
-    <Compile Include="File_reader.py" />
+    <Compile Include="File_read.py" />
     <Compile Include="Start.py" />
     <Compile Include="Threads_Manager.py" />
     <Compile Include="Turbine.py" />

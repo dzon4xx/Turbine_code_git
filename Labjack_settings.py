@@ -18,7 +18,7 @@ class LabJack(labjack_class):
         def set_labjack(self, devices_data):
             """ labjack setting for proper valve work."""
             mode_map  = {'PWM8': LJ_tmPWM8, 'PWM16': LJ_tmPWM16, 'freq_out': LJ_tmFREQOUT}
-            read_resolution =   12
+            read_resolution =   16
                                                      
             def set_timers_counters(devices_data):
 

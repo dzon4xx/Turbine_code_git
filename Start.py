@@ -15,10 +15,10 @@ import threading
 import sys
 import imp
 
-from __init__ import debug, devices_data, kinds_list, DEVICES_FILE_PATH, DEVICES_CHAR_PATH 
+from __init__ import *
 
 import Threads_Manager
-import File_reader
+import File_read
 import Turbine
 import Database_manage
 
@@ -27,8 +27,8 @@ class Start():
     def __init__( self ):
        pass
 
-    def Get_devices_to_launch( self ):
-
+    def Get_devices_to_launch( self, turbine_name ):
+        #turbine_settings = Settings(turbine_name)
         VALVE, THROTTLE, SERVO, RELAY, POTENTIOMETER, REV_COUNTER, FLOWMETER, THERMOMETER,  MANOMETER, EXHAUST_SENSOR, CURRENT_METER, VOLTAGE_METER, FREQUENCY_METER =  kinds_list
 
         classes_map     = { THERMOMETER :Turbine.Measure_Device, 
@@ -46,8 +46,8 @@ class Start():
                             POTENTIOMETER: Turbine.Starter_fan  
                             } 
                     
-        Devices_creator =   File_reader.Devices_creator()
-        loaded_devices_data, devices_instances  = Devices_creator.prepare_devices_to_launch( DEVICES_FILE_PATH, DEVICES_CHAR_PATH, devices_data, classes_map )
+        Devices_creator =   File_read.Devices_creator()
+        loaded_devices_data, devices_instances  = Devices_creator.prepare_devices_to_launch(devices_data, DEVICES_MAP_PATH, DEVICES_CHAR_PATH ,  classes_map )
 
         Turbine.d.set_labjack(loaded_devices_data)
         return devices_instances
@@ -64,11 +64,15 @@ class Start():
         #command_thread.start()
 
 
-starter = Start()
-operating_devices = starter.Get_devices_to_launch()
-recorder = Database_manage.Record() 
-exporter = Database_manage.Export( ["Turbine", "History"], operating_devices )   # sending history start_dir_list
+#turbine_name = "Deutz_turbine"
+turbine_name = "Mitsubishi_turbine"
 
+starter = Start()
+
+operating_devices = starter.Get_devices_to_launch(turbine_name)
+recorder = Database_manage.Record() 
+#exporter = Database_manage.Export( history_dir, operating_devices )   # sending history start_dir_list
+exporter = None
 starter.Start_threads( operating_devices, recorder, exporter)
 
 

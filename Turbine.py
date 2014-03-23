@@ -18,16 +18,14 @@ class Device(object):
     def __init__(self, device_attrs ):
 
         self.id             =   device_attrs[ID]
-        self.point          =   device_attrs[POINT]
+        self.point          =   'P' + str(device_attrs[POINT])
         self.name           =   device_attrs[NAME]
         self.direction      =   device_attrs[DIRECTION]
         self.type           =   device_attrs[TYPE]
-        self.kind           =   device_attrs[KIND]
-        dir                 =   ['Turbine', 'Points', 'P'+str(self.point), self.name] 
-        self.dir            =   client.get_dir(dir)
-
-        self.history_dir    =   client.get_dir(['Turbine', 'History', 'Points', 'P'+str(self.point), self.kind])
+        self.kind           =   device_attrs[KIND]            
+        self.dir            =   client.get_dir(PRESENT_DIR + [self.point, self.name] )
         
+        self.save_time      =  float(device_attrs[SETTINGS][SAVE_TIME])
         self.record_id      =   0
         self.value          =   client.get_attr( self.dir, 'value' ) 
 
@@ -64,12 +62,11 @@ class Measure_Device(Device):
             def thermocouple_conv():
 
                 voltage = 0
-                def convert(voltage):
-                    #print "temp in convert: ",               
+                def convert(voltage):              
                     return TCVoltsToTemp(LJ_ttK, voltage , 292  )-273.15
                 return convert
 
-            if device_attrs[CHARACTERISTIC] != 0:
+            if device_attrs[CHARACTERISTIC] != '0':
                 char            =   device_attrs[CHARACTERISTIC]
                 convert         =   interpol_char(char)
                 return convert
@@ -98,7 +95,8 @@ class Measure_Device(Device):
                     return (voltage-voffset)/gain
                 return read_value
 
-            elif self.kind == REV_COUNTER:   
+            elif self.kind == REV_COUNTER:
+                   
                 def read_value():
                     return self.get_frequency()
                 return read_value
@@ -121,13 +119,12 @@ class Measure_Device(Device):
         convert    = get_convert_function(self.device_attrs)
         sum_value = 0.
         sum_iter = 0
-        save_time    = float(self.device_attrs[SETTINGS][SAVE_TIME])    
         start = time.time()
                    
         while True:                       
             sum_value, sum_iter = sum_readings(sum_value, sum_iter)
 
-            if time.time()-start > save_time:
+            if time.time()-start > self.save_time:
 
                 mean_value =  sum_value/sum_iter
                 conv_mean_value  =  convert(mean_value)
@@ -166,11 +163,15 @@ class Rev_counter(Measure_Device):
 class Control_device(Device):
     'Class defining run method of controled devices'
     def run(self):
+   
+        start = time.time()
         while True:
-            new_value = client.get_attr( self.dir, 'value' )         ## later on must check if percent is (0%, 100%) range
-            if new_value != self.value:
-                self.set_value(new_value)
-                self.value = deepcopy(new_value)
+            if time.time() - start > self.save_time:
+                new_value = client.get_attr( self.dir, 'value' )
+                start = time.time()         
+                if new_value != self.value:
+                    self.set_value(new_value)
+                    self.value = deepcopy(new_value)
                             
 class Regulated_device(Control_device):
     'Class defining atribute position for regulated devices. Handles apropriate method for setting value based on who is caller'

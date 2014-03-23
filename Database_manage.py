@@ -30,16 +30,16 @@ class History():
     def __init__(self, start_dir_list, operating_devices):
         
         self.history_dir, self.history_dir_list  = self.__get_datetime_dir(start_dir_list)
-        #self.create_devices_history_dir(operating_devices)  
+        self.create_devices_history_dir(operating_devices)  
 
     def create_devices_history_dir(self, operating_devices):
         """Creates device.history_dir atribute which is path to device's history catalog """
 
         for device in operating_devices:
-            point_dir   = client.add_get_subdir(self.history_dir, str(device.point) )
-            device_dir  = client.add_get_subdir(point_dir, device.device_type )
-            device.history_dir = device_dir
+            point_history_dir   = client.add_get_subdir(self.history_dir, device.point )
+            device_history_dir  = client.add_get_subdir(point_history_dir, device.name )
 
+        pass
     def create_folder( self ):
         """Creates a folder where history data will be stored """
 
@@ -57,47 +57,39 @@ class History():
 
     def __get_datetime_dir(self, start_dir_list):
 
+        def get_timestamp( ):
+            """if option = 1 return time, else return date """                       
+            now = datetime.datetime.now()
+            now = str(now)
+            date, time = now.split(' ')
+            time = time.split('.')[0]
+            return date, time
+
         start_dir       = client.get_dir(start_dir_list)
 
-        today = self.current_datetime(time_option=False)
-        now   = self.current_datetime(time_option=True)
+        today, now = get_timestamp() 
 
-        start_dir_list.append( today )
-        today_dir_list  = deepcopy(start_dir_list)
-        today_dir_list.append(now)
-        now_dir_list    = deepcopy(today_dir_list)
+        
+        today_dir_list  = start_dir_list + [today] 
+        now_dir_list    = today_dir_list + [now]
 
         today_dir       = client.get_dir(today_dir_list)
 
         if today_dir is None:
-            today_dir = client.add_get_subdir(start_dir, self.current_datetime(time_option=False))           
+            today_dir = client.add_get_subdir(start_dir, today)           
             #start_dir = start_dir_list.append(self.current_datetime(time_option=false))
-            now_dir   = client.add_get_subdir(today_dir, self.current_datetime(time_option=True))
+            now_dir   = client.add_get_subdir(today_dir, now)
             client.add_attr_and_set_value(now_dir, "_sleep_time", sleep_time)
 
         else:
-            now_dir         = client.get_dir(now_dir_list)
-            
+            now_dir         = client.get_dir(now_dir_list)            
             if now_dir is None:
-                now_dir   = client.add_get_subdir(today_dir, self.current_datetime(time_option=True))
+                now_dir   = client.add_get_subdir(today_dir, now)
                 client.add_attr_and_set_value(now_dir, "_sleep_time", sleep_time)
                         
         return now_dir, now_dir_list
 
-    def current_datetime(self, time_option):
-
-        """if option = 1 return time, else return date """                       
-        now = datetime.datetime.now()
-        now = str(now)
-        now = now.split(' ')
-        date = now[0]
-        time = now[1].split('.')
-        time = time[0]
-
-        if time_option:
-            return time
-        else:
-            return date
+    
       
 class Export(History):
 

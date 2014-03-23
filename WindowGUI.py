@@ -22,6 +22,9 @@ class Form(QDialog):
 
     def __init__(self, parent=None):
         super(Form, self).__init__(parent)
+        self.manager = ManagerGUI(self)
+        self.operating_devices = self.manager.Prepare_devices()
+
         self.dict_plot = {}
         self.tabWidget = QTabWidget()
         self.TurbineWidget = QWidget()
@@ -31,16 +34,14 @@ class Form(QDialog):
 
         self.TurbineWidget.setLayout(self.TurbineTab())
         
-        self.PlotsTab = PlotsTab(self.dict_plot)
+        self.PlotsTab = PlotsTab(self.dict_plot, self.operating_devices)
         self.PlotsWidget.setLayout(self.PlotsTab.layout) 
         
         layout = QVBoxLayout()
         layout.addWidget(self.tabWidget)
         self.setLayout(layout)
         self.setWindowTitle("Gas Turbine Project")
-        
-        self.manager = ManagerGUI(self)
-        
+            
         self.timer = QTimer()
         self.timer_auto = QTimer()
         self.connect(self.timer, SIGNAL("timeout()"), self.manager.launch)
@@ -83,47 +84,24 @@ class Form(QDialog):
     def SensorLabelLayout (self):
         self.dict_label_sensor = {}
         box_radio = QGroupBox('Box')
-    
-        nt = 5
-        for point in range(nt):
-            self.dict_label_sensor['label_THERMOMETER' + str(point)] = SensorLabel('ST' + str(point), 'C')
-            
-        np = 4
-        for point in range(np):
-            self.dict_label_sensor['label_MANOMETER' + str(point)] = SensorLabel('SP' + str(point), 'bar')
-            
-        nf = 2
-        for point in range(nf):
-            self.dict_label_sensor['label_FLOWMETER' + str(point + 1)] = SensorLabel('SF' + str(point + 1), 'm3/h')
-            self.dict_label_sensor['label_V' + str(point + 1)] = SensorLabel('SV' + str(point + 1), 'RMP', mode = 'LCD')
-        
         name_layout = QLabel("SENSORS")
         self.layout_sensors = QGridLayout()
         self.layout_sensors.addWidget(name_layout, 0, 0, 1, 6, Qt.AlignCenter)
-        self.layout_sensors.addWidget(box_radio, 0, 0, 1, 1, Qt.AlignCenter)        
-        for point in range(nt):
-            self.layout_sensors.addWidget(self.dict_label_sensor['label_THERMOMETER' + str(point)].radio, point + 1, 0)
-            self.layout_sensors.addWidget(self.dict_label_sensor['label_THERMOMETER' + str(point)].name, point + 1, 1)
-            self.layout_sensors.addWidget(self.dict_label_sensor['label_THERMOMETER' + str(point)].value, point + 1, 2)
-            self.layout_sensors.addWidget(self.dict_label_sensor['label_THERMOMETER' + str(point)].unit, point + 1, 3)
-            
-        for point in range(np):
-            if point == 2: continue
-            if point == 3: point = point - 1
-            self.layout_sensors.addWidget(self.dict_label_sensor['label_MANOMETER' + str(point)].radio, point + 1, 4)
-            self.layout_sensors.addWidget(self.dict_label_sensor['label_MANOMETER' + str(point)].name, point + 1, 5)
-            self.layout_sensors.addWidget(self.dict_label_sensor['label_MANOMETER' + str(point)].value, point + 1, 6)
-            self.layout_sensors.addWidget(self.dict_label_sensor['label_MANOMETER' + str(point)].unit, point + 1, 7)
-            
-        for point in range(nf):
-            self.layout_sensors.addWidget(self.dict_label_sensor['label_FLOWMETER' + str(point + 1)].radio, point + 4, 4)
-            self.layout_sensors.addWidget(self.dict_label_sensor['label_FLOWMETER' + str(point + 1)].name, point + 4, 5)
-            self.layout_sensors.addWidget(self.dict_label_sensor['label_FLOWMETER' + str(point + 1)].value, point + 4, 6)
-            self.layout_sensors.addWidget(self.dict_label_sensor['label_FLOWMETER' + str(point + 1)].unit, point + 4, 7)
-            self.layout_sensors.addWidget(self.dict_label_sensor['label_V' + str(point + 1)].radio, point + 6, 4)
-            self.layout_sensors.addWidget(self.dict_label_sensor['label_V' + str(point + 1)].name, point + 6, 5)
-            self.layout_sensors.addWidget(self.dict_label_sensor['label_V' + str(point + 1)].value, point + 6, 6)
-            self.layout_sensors.addWidget(self.dict_label_sensor['label_V' + str(point + 1)].unit, point + 6, 7)
+        self.layout_sensors.addWidget(box_radio, 0, 0, 1, 1, Qt.AlignCenter) 
+        
+        p1 = 0
+        p2 = 0
+        for device in self.operating_devices:
+            if device.direction == "INPUT":
+                if p1 == 7: 
+                    p1 = 0
+                    p2 = 4
+                self.dict_label_sensor[device.kind + str(device.point)] = SensorLabel(device.kind, str(device.point), 'C')
+                self.layout_sensors.addWidget(self.dict_label_sensor[device.kind + str(device.point)].radio, p1 + 1, p2 + 0)
+                self.layout_sensors.addWidget(self.dict_label_sensor[device.kind + str(device.point)].name, p1 + 1, p2 + 1)
+                self.layout_sensors.addWidget(self.dict_label_sensor[device.kind + str(device.point)].value, p1 + 1, p2 + 2)
+                self.layout_sensors.addWidget(self.dict_label_sensor[device.kind + str(device.point)].unit, p1 + 1, p2 + 3)
+                p1 += 1
         
         plot_main = pg.PlotWidget(name= 'Main plot')
         self.layout_sensors.addWidget(plot_main, 8, 0, 1, 8)
@@ -259,20 +237,20 @@ class Form(QDialog):
         
 class SensorLabel (QDialog):
     
-    def __init__(self, name, unit, mode = 'normal'):
-        self.name = QLabel(name)
+    def __init__(self, name, point, unit, mode = 'normal'):
+        self.name = QLabel(name + ' ' + point)
         self.unit = QLabel(unit)
         hej = QGroupBox() #to delete       
         self.radio = QRadioButton()
         
-        if mode == 'LCD':
+        if name == 'REV_COUNTER':
             self.value = QLCDNumber()
-            self.value.setFixedHeight(30)
+            self.value.setFixedHeight(25)
             self.value.setFixedWidth(50)
             self.value.setNumDigits(4)
         else:
             self.value = QLineEdit()
-            self.value.setFixedWidth(100)
+            self.value.setFixedWidth(60)
             self.value.setText(str(0))
             
 class SliderLabel (QDialog):
@@ -282,20 +260,15 @@ class SliderLabel (QDialog):
         self.layout = layout
         self.mode = mode
         self.name = QLabel(name)
-        #name = name.split()
-        #self.name = {}
-        #self.name[0] = QLabel(name[0])
-        #self.name[1] = QLabel(name[1])
         
         if self.mode == 'slider':
             self.slider = QSlider(direction)
             self.slider_display = QLCDNumber()        
             self.slider_display.setFixedHeight(30)
-            self.slider_display.setFixedWidth(50)
+            self.slider_display.setFixedWidth(60)
             self.slider_display.setNumDigits(2)
         
             self.layout.addWidget(self.name, 0, p2, Qt.AlignCenter)
-            #self.layout.addWidget(self.name[1], 1, p2, Qt.AlignCenter)
             self.layout.addWidget(self.slider, 1, p2)
             self.layout.addWidget(self.slider_display, 2, p2)
             

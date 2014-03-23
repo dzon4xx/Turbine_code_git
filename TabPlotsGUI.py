@@ -14,48 +14,50 @@ import pyqtgraph as pg
 
 class PlotsTab(QDialog):
 
-    def __init__(self, dict_plot):
-        self.dict_plot = dict_plot        
-        self.layout = QGridLayout()        
-        checkBox_temp_layout = QGridLayout()
-        checkBox_pres_layout = QGridLayout()
+    def __init__(self, dict_plot, operating_devices):
+        self.dict_plot = dict_plot  
+        self.operating_devices = operating_devices
+        self.layout = QGridLayout()
+        layout_plot_up = QGridLayout()
+        layout_plot_down = QGridLayout()        
+        layout_checkBox_up = QGridLayout()
+        layout_checkBox_down = QGridLayout()
         
-        self.dict_plot['THERMOMETER' + str(0)] = PlotLabel('temp', 0) 
-        self.dict_plot['MANOMETER' + str(0)] = PlotLabel('pres', 0)              
-        self.layout.addLayout(checkBox_temp_layout, 0, 0, 3, 1)
-        self.layout.addLayout(checkBox_pres_layout, 3, 0, 3, 1)
+        label_logo = QLabel('KNE')
+        self.image_logo = QPixmap('images/kne.png')
+        width = self.image_logo.width() * 0.11
+        height = self.image_logo.height() * 0.11
+        image = self.image_logo.scaled(width, height, Qt.KeepAspectRatio)        
+        label_logo.setPixmap(image)
         
-        nt = 4 
-        for point in range(nt):
-            point += 1
-            self.dict_plot['THERMOMETER' + str(point)] = PlotLabel('temp', point)            
-            
-            checkBox_temp_layout.addWidget(self.dict_plot['THERMOMETER' + str(point)].checkBox)
-            
-            self.layout.addWidget(self.dict_plot['THERMOMETER' + str(point)].plot, 0, point, 3, 2)
-                
-            self.connect(self.dict_plot['THERMOMETER' + str(point)].checkBox, SIGNAL("toggled(bool)"), self.dict_plot['THERMOMETER' + str(point)].check)
+        label_logo2 = QLabel('KNE')       
+        label_logo2.setPixmap(image)
         
-        self.dict_plot['MANOMETER' + str(1)] = PlotLabel('pres', 1)
-        self.layout.addWidget(self.dict_plot['MANOMETER' + str(1)].plot, 3, 1, 3, 2)
-        checkBox_pres_layout.addWidget(self.dict_plot['MANOMETER' + str(1)].checkBox)
-        self.connect(self.dict_plot['MANOMETER' + str(1)].checkBox, SIGNAL("toggled(bool)"), self.dict_plot['MANOMETER' + str(1)].check)
+        layout_plot_up.addWidget(label_logo, 0, 0, Qt.AlignLeft)
+        layout_plot_down.addWidget(label_logo2, 0, 0, Qt.AlignLeft)
+                    
+        self.layout.addLayout(layout_checkBox_up, 0, 0, 3, 1)
+        self.layout.addLayout(layout_checkBox_down, 3, 0, 3, 1)
+        self.layout.addLayout(layout_plot_up, 0, 1, 3, 4)
+        self.layout.addLayout(layout_plot_down, 3, 1, 3, 4)
         
-        self.dict_plot['MANOMETER' + str(2)] = PlotLabel('pres', 2)
-        self.layout.addWidget(self.dict_plot['MANOMETER' + str(2)].plot, 3, 2, 3, 2)
-        checkBox_pres_layout.addWidget(self.dict_plot['MANOMETER' + str(2)].checkBox)
-        self.connect(self.dict_plot['MANOMETER' + str(2)].checkBox, SIGNAL("toggled(bool)"), self.dict_plot['MANOMETER' + str(2)].check)
         
-        self.dict_plot['FLOWMETER' + str(1)] = PlotLabel('flow', 1)
-        self.layout.addWidget(self.dict_plot['FLOWMETER' + str(1)].plot, 3, 3, 3, 2)
-        checkBox_pres_layout.addWidget(self.dict_plot['FLOWMETER' + str(1)].checkBox)
-        self.connect(self.dict_plot['FLOWMETER' + str(1)].checkBox, SIGNAL("toggled(bool)"), self.dict_plot['FLOWMETER' + str(1)].check)
+        p2 = 0
+        layout_plot     =   layout_plot_up
+        layout_checkBox =   layout_checkBox_up
         
-        self.dict_plot['FLOWMETER' + str(2)] = PlotLabel('flow', 2)
-        self.layout.addWidget(self.dict_plot['FLOWMETER' + str(2)].plot, 3, 4, 3, 2) 
-        checkBox_pres_layout.addWidget(self.dict_plot['FLOWMETER' + str(2)].checkBox)
-        self.connect(self.dict_plot['FLOWMETER' + str(2)].checkBox, SIGNAL("toggled(bool)"), self.dict_plot['FLOWMETER' + str(2)].check)                
-         
+        for device in self.operating_devices:
+            if device.point == 0:
+                self.dict_plot[device.kind + str(0)] = PlotLabel(device.kind, 0) 
+            if device.direction == "INPUT" and device.point != 0:
+                if p2 == 4:
+                    layout_plot     =   layout_plot_down
+                    layout_checkBox =   layout_checkBox_down
+                    p2 = 0
+                self.dict_plot[device.kind + str(device.point)] = PlotLabel(device.kind, device.point)
+                layout_checkBox.addWidget(self.dict_plot[device.kind + str(device.point)].checkBox)
+                layout_plot.addWidget(self.dict_plot[device.kind + str(device.point)].plot, 0, p2, 3, 2)
+                p2 += 1
         
                      
 class PlotLabel (QDialog):
@@ -63,10 +65,11 @@ class PlotLabel (QDialog):
     def __init__(self, name, point):
         self.name = name
         self.plot = pg.PlotWidget(name= self.name +'_'+ str(point))
-        self.checkBox = QCheckBox(self.name +'_'+ str(point))
+        self.checkBox = QCheckBox(self.name +' '+ str(point))
         self.checkBox.setChecked(True)
         
         self.curve = self.set_curve()
+        self.connect(self.checkBox, SIGNAL("toggled(bool)"), self.check)
         
     def set_curve(self):
         if self.name == 'temp':
@@ -78,7 +81,7 @@ class PlotLabel (QDialog):
         if self.name == 'flow':
             title = 'Flow'
             unit = 'm3/h'
-        self.plot.setLabel('left', title, units= unit)
+        self.plot.setLabel('left', self.name, units= 'C')
         self.plot.setLabel('bottom', 'Time', units='s')
         self.plot.setXRange(0, 10)
         self.plot.setYRange(0, 10)

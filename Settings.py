@@ -1,52 +1,49 @@
-from Turbine import *
-from File_read import File_handler
+# -*- coding: utf-8 -*-
+from Nikitta import SiloReaderWriter
 
-class Settings():
-    DEUTZ           =   "Deutz_turbine"
-    MITSHUBISHI     =   "Mitsubishi_turbine"
-    kinds_list = ['VALVE', 'THROTTLE', 'SERVO', 'RELAY', 'POTENTIOMETER', 'REV_COUNTER', 'FLOWMETER', 
+
+DEUTZ           =   "Deutz_turbine"
+MITSHUBISHI     =   "Mitsubishi_turbine"
+
+
+turbine_name   =   MITSHUBISHI 
+
+DEVICES_PATH   =   ["Devices_data", turbine_name,]
+DEVICES_DATA   =   'devices_data'
+DEVICES_MAP    =   'devices_map'
+DEVICES_CHAR   =   'devices_characteristics'
+DEVICES_GUI    =   'devices_gui'
+DB_HISTORY_DIR =   [turbine_name, 'History']
+DB_PRESENT_DIR =   [turbine_name, 'Present', 'Points']
+
+
+ALL_KINDS_LIST = ['VALVE', 'THROTTLE', 'SERVO', 'RELAY', 'POTENTIOMETER', 'REV_COUNTER', 'FLOWMETER', 
               'THERMOMETER', 'MANOMETER', 'EXHAUST_SENSOR', 'CURRENT_METER', 'VOLTAGE_METER', 'FREQUENCY_METER']
-    def __init__ (self, turbine_name):
+VALVE, THROTTLE, SERVO, RELAY, POTENTIOMETER, REV_COUNTER, FLOWMETER, THERMOMETER, MANOMETER, EXHAUST_SENSOR, CURRENT_METER, VOLTAGE_METER, FREQUENCY_METER = ALL_KINDS_LIST
+              
 
-        self.turbine_name   =   turbine_name
-        self.devices_path   =   ["DevicesData", turbine_name]
-        self.db_history_dir =   [turbine_name, 'History']
-        self.db_present_dir =   [turbine_name, 'Present', 'Points']
-        
-        self.atributes      =   self.__get_atributes()
- 
-        
-    def __read_atributes(self, ):
-        fh  =   File_handler()
-        return fh.read_first_line()
+ATTRIBUTES      =   ['ID', 'ENABLED', 'POINT', 'NAME', 'DIRECTION', 'TYPE',	'KIND',	'CHANNELS',	'CHANNELS_DESCRIPTION',	'SETTINGS',	'CHARACTERISTIC']
+ID, ENABLED, POINT, NAME, DIRECTION, TYPE, KIND, CHANNELS, CHANNELS_DESCRIPTION, SETTINGS, CHARACTERISTIC   =   ATTRIBUTES
 
-    def get_classes_map(self, turbine_name):
-        
-        VALVE, THROTTLE, SERVO, RELAY, POTENTIOMETER, REV_COUNTER, FLOWMETER, THERMOMETER,  MANOMETER, EXHAUST_SENSOR, CURRENT_METER, VOLTAGE_METER, FREQUENCY_METER =  kinds_list
-        
-        if turbine_name == DEUTZ:
 
-            classes_map = { THERMOMETER :Turbine.Measure_Device, 
-                            MANOMETER: Turbine.Measure_Device, 
-                            FLOWMETER: Turbine.Measure_Device, 
-                            REV_COUNTER: Turbine.Rev_counter, 
-                            EXHAUST_SENSOR: Turbine.Measure_Device,                                       
-                            VALVE : Turbine.Gas_valve, 
-                            THROTTLE: Turbine.Throttle, 
-                            RELAY:Turbine.Switch_device, 
-                            SERVO: Turbine.Wastegate,
-                            POTENTIOMETER: Turbine.Starter_fan  
-                            } 
-
-        if turbine_name == MITSHUBISHI:
-            
-            classes_map = { THERMOMETER :Turbine.Measure_Device, 
-                            MANOMETER: Turbine.Measure_Device,                            
-                            CURRENT_METER: Turbine.Measure_Device,
-                            VOLTAGE_METER: Turbine.Measure_Device,
-                            FREQUENCY_METER: Turbine.Measure_Device,                                   
-                            } 
-
+ALL_DEVICES_NAMES_LIST = ["GAS_VALVE", "WASTEGATE", "MAIN_THROTTLE", "AUXILARY_THROTTLE", "STARTER_FAN", 
+                      "IGNITION", "OIL_PUMP", "REV_COUNTER_1ST", "REV_COUNTER_2ND", "FLOWMETER_AIR", 
+                      "FLOWMETER_GAS", "MANOMETER_INTROL", "MANOMETER_BOTLAND", "THERMOCOUPLE_K", 
+                      "LABJACK_TEMP_SENSOR",]
+GAS_VALVE, WASTEGATE, MAIN_THROTTLE, AUXILARY_THROTTLE, STARTER_FAN, IGNITION, OIL_PUMP, REV_COUNTER_1ST, REV_COUNTER_2ND, FLOWMETER_AIR, FLOWMETER_GAS, MANOMETER_INTROL, MANOMETER_BOTLAND, THERMOCOUPLE_K, LABJACK_TEMP_SENSOR, = ALL_DEVICES_NAMES_LIST
     
+#channels types
+DIO, AIN, DAC, TIO, CIO, NOT = ['DIO', 'AIN', 'DAC', 'TIO', 'CIO', 'NOT']
+MAX_CHANNEL = {DIO: 22, AIN: 13, DAC: 2, TIO: 7, CIO: 2, NOT: 1}
+#devices types
+DIGITAL_PULSE, DIGITAL, ANALOG = ['DIGITAL_PULSE', 'DIGITAL', 'ANALOG']
 
+#Settings
+MODE, VALUE, VOFFSET, GAIN, SAVE_TIME     =  'mode', 'value', 'voffset', 'gain', 'save_time'
+  
+#start dirs
+
+client = SiloReaderWriter.SiloReaderWriter()  
+sleep_time      = client.sleep_time
+avarage_time    = 0.1
 

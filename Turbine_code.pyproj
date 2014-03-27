@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{703c1168-15dc-4ff6-8cc1-9ce27728b047}</ProjectGuid>
+    <ProjectGuid>{6fcced2f-d5e8-4b51-8dab-68dea55d37af}</ProjectGuid>
     <ProjectHome />
     <StartupFile>Start.py</StartupFile>
     <SearchPath />
@@ -15,61 +15,40 @@
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'" />
   <PropertyGroup Condition="'$(Configuration)' == 'Release'" />
   <ItemGroup>
-    <Compile Include="Database_manage.py" />
-    <Compile Include="File_read.py" />
+    <Compile Include="GUI\WindowGUI.py" />
+    <Compile Include="Settings.py" />
     <Compile Include="Start.py" />
-    <Compile Include="Threads_Manager.py" />
-    <Compile Include="Turbine.py" />
-    <Compile Include="Write_turbine_tree.py" />
-    <Compile Include="__init__.py" />
-    <Content Include="DevicesMaps\input_devices_map.txt" />
-    <Content Include="DevicesMaps\output_devices_map.txt" />
-    <Content Include="images\diodeGreen.png" />
-    <Content Include="images\diodeRed.png" />
-    <Content Include="images\kne.png" />
-    <Content Include="images\scheme.png" />
-    <Content Include="images\scheme2.png" />
-    <Content Include="images\scheme3.png" />
-    <Content Include="images\scheme4.png" />
-    <Compile Include="LabJackFiles\LabJackPython.py" />
-    <Compile Include="LabJackFiles\Labjack_settings.py" />
-    <Compile Include="LabJackFiles\LJU3HV.py" />
-    <Compile Include="LabJackFiles\Modbus.py" />
-    <Compile Include="LabJackFiles\u3.py" />
-    <Compile Include="LabJackFiles\ue9.py" />
-    <Compile Include="LabJackFiles\__init__.py" />
-    <Content Include="History\2014-01-28\12-40-22\test.txt" />
-    <Content Include="History\2014-01-28\13-04-45\test.txt" />
-    <Content Include="History\2014-01-28\13-05-22\test.txt" />
-    <Content Include="History\2014-01-28\13-06-22\test.txt" />
-    <Content Include="History\2014-01-28\13-09-19\test.txt" />
-    <Content Include="History\2014-01-29\17-53-01\test.txt" />
-    <Content Include="History\2014-01-31\10-58-49\test.txt" />
-    <Content Include="History\2014-02-20\14-34-01\test.txt" />
-    <Content Include="History\2014-02-20\14-35-31\test.txt" />
-    <Content Include="History\2014-02-20\14-39-57\test.txt" />
-    <Content Include="History\2014-02-20\15-14-12\test.txt" />
+    <Content Include="Devices_data\uwagi.txt" />
+    <Compile Include="Driver\Database_mana.py" />
+    <Compile Include="Driver\Database_manage.py" />
+    <Compile Include="Driver\File_read.py" />
+    <Compile Include="Driver\Labjack_settings.py" />
+    <Compile Include="Driver\Threads_Manager.py" />
+    <Compile Include="Driver\Turbine_devices.py" />
+    <Compile Include="Driver\__init__.py" />
+    <Compile Include="GUI\TabPlotsGUI.py" />
+    <Compile Include="GUI\ThreadGUI.py" />
+    <Compile Include="Driver\LabJackFiles\LabJackPython.py" />
+    <Compile Include="Driver\LabJackFiles\Labjack_settings.py" />
+    <Compile Include="Driver\LabJackFiles\LJU3HV.py" />
+    <Compile Include="Driver\LabJackFiles\Modbus.py" />
+    <Compile Include="Driver\LabJackFiles\u3.py" />
+    <Compile Include="Driver\LabJackFiles\ue9.py" />
+    <Compile Include="Driver\LabJackFiles\__init__.py" />
+    <Content Include="GUI\images\diodeGreen.png" />
+    <Content Include="GUI\images\diodeRed.png" />
+    <Content Include="GUI\images\kne.png" />
+    <Content Include="GUI\images\scheme.png" />
+    <Content Include="GUI\images\scheme2.png" />
+    <Content Include="GUI\images\scheme3.png" />
+    <Content Include="GUI\images\scheme4.png" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="DevicesMaps" />
-    <Folder Include="History\" />
-    <Folder Include="History\2014-01-28\" />
-    <Folder Include="History\2014-01-28\12-40-22" />
-    <Folder Include="History\2014-01-28\13-04-45" />
-    <Folder Include="History\2014-01-28\13-05-22" />
-    <Folder Include="History\2014-01-28\13-06-22" />
-    <Folder Include="History\2014-01-28\13-09-19" />
-    <Folder Include="History\2014-01-29\" />
-    <Folder Include="History\2014-01-29\17-53-01" />
-    <Folder Include="History\2014-01-31\" />
-    <Folder Include="History\2014-01-31\10-58-49" />
-    <Folder Include="History\2014-02-20\" />
-    <Folder Include="History\2014-02-20\14-34-01" />
-    <Folder Include="History\2014-02-20\14-35-31" />
-    <Folder Include="History\2014-02-20\14-39-57" />
-    <Folder Include="History\2014-02-20\15-14-12" />
-    <Folder Include="images" />
-    <Folder Include="LabJackFiles" />
+    <Folder Include="Devices_data" />
+    <Folder Include="Driver" />
+    <Folder Include="Driver\LabJackFiles" />
+    <Folder Include="GUI" />
+    <Folder Include="GUI\images" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" />
 </Project>

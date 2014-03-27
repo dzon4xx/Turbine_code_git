@@ -15,13 +15,16 @@ import pyqtgraph as pg
 
 from TabPlotsGUI import PlotsTab
 from ThreadGUI import ManagerGUI
-from __init__ import *
+from Settings import *
 
 
 class Form(QDialog):
 
     def __init__(self, parent=None):
         super(Form, self).__init__(parent)
+        self.manager = ManagerGUI(self)
+        self.operating_devices = self.manager.load_devices()
+
         self.dict_plot = {}
         self.tabWidget = QTabWidget()
         self.TurbineWidget = QWidget()
@@ -31,17 +34,14 @@ class Form(QDialog):
 
         self.TurbineWidget.setLayout(self.TurbineTab())
         
-        self.PlotsTab = PlotsTab(self.dict_plot)
+        self.PlotsTab = PlotsTab(self.dict_plot, self.operating_devices)
         self.PlotsWidget.setLayout(self.PlotsTab.layout) 
         
         layout = QVBoxLayout()
         layout.addWidget(self.tabWidget)
         self.setLayout(layout)
         self.setWindowTitle("Gas Turbine Project")
-        
-        self.manager = ManagerGUI(self)
-        self.manager.prepare_operating_divaces()
-        
+            
         self.timer = QTimer()
         self.timer_auto = QTimer()
         self.connect(self.timer, SIGNAL("timeout()"), self.manager.launch)
@@ -67,8 +67,8 @@ class Form(QDialog):
         
         
     def TitleLayout (self):
-        layout_title = QGridLayout()
-        
+
+        layout_title = QGridLayout()        
         label_logo = QLabel('KNE')
         self.image_logo = QPixmap('images/kne.png')
         width = self.image_logo.width() * 0.04
@@ -84,45 +84,24 @@ class Form(QDialog):
     def SensorLabelLayout (self):
         self.dict_label_sensor = {}
         box_radio = QGroupBox('Box')
-    
-        nt = 5
-        for point in range(nt):
-            self.dict_label_sensor['label_T' + str(point)] = SensorLabel('ST' + str(point), 'C')
-            
-        np = 3
-        for point in range(np):
-            self.dict_label_sensor['label_P' + str(point)] = SensorLabel('SP' + str(point), 'bar')
-            
-        nf = 2
-        for point in range(nf):
-            self.dict_label_sensor['label_F' + str(point + 1)] = SensorLabel('SF' + str(point + 1), 'm3/h')
-            self.dict_label_sensor['label_V' + str(point + 1)] = SensorLabel('SV' + str(point + 1), 'RMP', mode = 'LCD')
-        
         name_layout = QLabel("SENSORS")
         self.layout_sensors = QGridLayout()
         self.layout_sensors.addWidget(name_layout, 0, 0, 1, 6, Qt.AlignCenter)
-        self.layout_sensors.addWidget(box_radio, 0, 0, 1, 1, Qt.AlignCenter)        
-        for point in range(nt):
-            self.layout_sensors.addWidget(self.dict_label_sensor['label_T' + str(point)].radio, point + 1, 0)
-            self.layout_sensors.addWidget(self.dict_label_sensor['label_T' + str(point)].name, point + 1, 1)
-            self.layout_sensors.addWidget(self.dict_label_sensor['label_T' + str(point)].value, point + 1, 2)
-            self.layout_sensors.addWidget(self.dict_label_sensor['label_T' + str(point)].unit, point + 1, 3)
-            
-        for point in range(np):
-            self.layout_sensors.addWidget(self.dict_label_sensor['label_P' + str(point)].radio, point + 1, 4)
-            self.layout_sensors.addWidget(self.dict_label_sensor['label_P' + str(point)].name, point + 1, 5)
-            self.layout_sensors.addWidget(self.dict_label_sensor['label_P' + str(point)].value, point + 1, 6)
-            self.layout_sensors.addWidget(self.dict_label_sensor['label_P' + str(point)].unit, point + 1, 7)
-            
-        for point in range(nf):
-            self.layout_sensors.addWidget(self.dict_label_sensor['label_F' + str(point + 1)].radio, point + 4, 4)
-            self.layout_sensors.addWidget(self.dict_label_sensor['label_F' + str(point + 1)].name, point + 4, 5)
-            self.layout_sensors.addWidget(self.dict_label_sensor['label_F' + str(point + 1)].value, point + 4, 6)
-            self.layout_sensors.addWidget(self.dict_label_sensor['label_F' + str(point + 1)].unit, point + 4, 7)
-            self.layout_sensors.addWidget(self.dict_label_sensor['label_V' + str(point + 1)].radio, point + 6, 4)
-            self.layout_sensors.addWidget(self.dict_label_sensor['label_V' + str(point + 1)].name, point + 6, 5)
-            self.layout_sensors.addWidget(self.dict_label_sensor['label_V' + str(point + 1)].value, point + 6, 6)
-            self.layout_sensors.addWidget(self.dict_label_sensor['label_V' + str(point + 1)].unit, point + 6, 7)
+        self.layout_sensors.addWidget(box_radio, 0, 0, 1, 1, Qt.AlignCenter) 
+        
+        p1 = 0
+        p2 = 0
+        for device in self.operating_devices:
+            if device.direction == "INPUT":
+                if p1 == 7: 
+                    p1 = 0
+                    p2 = 4
+                self.dict_label_sensor[device.kind + str(device.point)] = SensorLabel(device.kind, str(device.point), 'C')
+                self.layout_sensors.addWidget(self.dict_label_sensor[device.kind + str(device.point)].radio, p1 + 1, p2 + 0)
+                self.layout_sensors.addWidget(self.dict_label_sensor[device.kind + str(device.point)].name, p1 + 1, p2 + 1)
+                self.layout_sensors.addWidget(self.dict_label_sensor[device.kind + str(device.point)].value, p1 + 1, p2 + 2)
+                self.layout_sensors.addWidget(self.dict_label_sensor[device.kind + str(device.point)].unit, p1 + 1, p2 + 3)
+                p1 += 1
         
         plot_main = pg.PlotWidget(name= 'Main plot')
         self.layout_sensors.addWidget(plot_main, 8, 0, 1, 8)
@@ -131,6 +110,7 @@ class Form(QDialog):
         return self.layout_sensors
         
     def set_curve(self, plot):
+
         plot.setLabel('left', 'Checked')
         plot.setLabel('bottom', 'Time', units='s')
         plot.setXRange(0, 10)
@@ -142,45 +122,11 @@ class Form(QDialog):
         
     def SliderLayout (self):
         self.layout_sliders = QGridLayout()
-        
-        name1_slider_throttle = QLabel('Air')
-        name2_slider_throttle = QLabel('Throttle')        
-        self.value_slider_throttle = QLCDNumber()
-        self.value_slider_throttle.setFixedHeight(30)
-        self.value_slider_throttle.setFixedWidth(50)
-        self.value_slider_throttle.setNumDigits(2)
-        self.slider_air_throttle = QSlider(Qt.Vertical)
-        
-        name1_slider_valve = QLabel('Gas')
-        name2_slider_valve = QLabel('Valve')        
-        self.value_slider_valve = QLCDNumber()
-        self.value_slider_valve.setFixedHeight(30)
-        self.value_slider_valve.setFixedWidth(50)
-        self.value_slider_valve.setNumDigits(2)
-        self.slider_gas_valve = QSlider(Qt.Vertical)
-        
-        self.layout_sliders.addWidget(name1_slider_throttle, 0, 0, Qt.AlignCenter)
-        self.layout_sliders.addWidget(name2_slider_throttle, 1, 0, Qt.AlignCenter)
-        self.layout_sliders.addWidget(self.slider_air_throttle, 2, 0)
-        self.layout_sliders.addWidget(self.value_slider_throttle, 3, 0)
-        self.layout_sliders.addWidget(name1_slider_valve, 0, 1, Qt.AlignCenter)
-        self.layout_sliders.addWidget(name2_slider_valve, 1, 1, Qt.AlignCenter)
-        self.layout_sliders.addWidget(self.slider_gas_valve, 2, 1)
-        self.layout_sliders.addWidget(self.value_slider_valve, 3, 1)
-        
-        self.connect(self.slider_air_throttle, SIGNAL("valueChanged(int)"), self.set_position_slider_throttle)
-        self.connect(self.slider_gas_valve, SIGNAL("valueChanged(int)"), self.set_position_slider_valve)
+                
+        self.slider_air_throttle = SliderLabel('THROTTLE', 1, self.layout_sliders, p1 = 0, p2 = 0)
+        self.slider_gas_valve = SliderLabel('VALVE', 2, self.layout_sliders, p1 = 0, p2 = 1)
         
         return self.layout_sliders
-        
-    def set_position_slider_throttle(self):
-        value = self.slider_air_throttle.value()
-        self.value_slider_throttle.display(value)
-        
-    def set_position_slider_valve(self):
-        value = self.slider_gas_valve.value()
-        self.value_slider_valve.display(value)
-        
         
     def SchemeLayout (self):
         self.layout_scheme = QGridLayout()
@@ -192,40 +138,25 @@ class Form(QDialog):
         image = self.image_scheme.scaled(width, height, Qt.KeepAspectRatio)        
         label_scheme.setPixmap(image)
         
-        self.dial_waste_gate = QDial()
-        self.dial_waste_gate.setRange(0, 100)
-        self.dial_waste_gate.setFixedHeight(80)
+        #self.slider_gas_valve = SliderLabel('VALVE', 2, self.layout_scheme, direction = Qt.Horizontal)
+        self.slider_wastegate = SliderLabel('WASTEGATE', 4, self.layout_scheme, mode = 'dial')
         
-        self.bar_waste_gate = QProgressBar()
-        self.bar_waste_gate.setFixedWidth(150)
-        self.bar_waste_gate.setFixedHeight(25)
-        self.bar_waste_gate.setValue(0)
-            
         self.layout_scheme.addWidget(label_name, 0, 0, 1, 20, Qt.AlignCenter)
         self.layout_scheme.addWidget(label_scheme, 1, 0, 20, 20)
-        self.layout_scheme.addWidget(self.bar_waste_gate, 5, 15, 3, 6)
-        self.layout_scheme.addWidget(self.dial_waste_gate, 8, 15)
-        
+        #self.layout_scheme.addWidget(self.slider_gas_valve.slider, 0, 0)
+        #self.layout_scheme.addWidget(self.slider_gas_valve.slider_display, 0, 1)     
+        self.layout_scheme.addWidget(self.slider_wastegate.slider, 8, 15)
+        self.layout_scheme.addWidget(self.slider_wastegate.slider_display, 5, 15, 3, 6)
+                        
         self.dict_switch = {}
-        n_switch = 4
-        self.dict_switch['switch_1'] = SwitchLabel(self.layout_scheme, p1 = 16, p2 = 1)
-        self.dict_switch['switch_2'] = SwitchLabel(self.layout_scheme, p1 = 16, p2 = 5)
-        self.dict_switch['switch_3'] = SwitchLabel(self.layout_scheme, p1 = 20, p2 = 8)
-        self.dict_switch['switch_4'] = SwitchLabel(self.layout_scheme, p1 = 4, p2 = 13)
-
-        self.connect(self.dial_waste_gate, SIGNAL("valueChanged(int)"), self.set_position_dial)
-        for i in range(n_switch):
-            i += 1
-            self.connect(self.dict_switch['switch_' + str(i)].switch, SIGNAL("toggled(bool)"), self.dict_switch['switch_' + str(i)].check)
+        self.dict_switch['switch_1'] = SwitchLabel('STARTER_FAN', 0, self.layout_scheme, p1 = 16, p2 = 1)
+        self.dict_switch['switch_2'] = SwitchLabel('THROTTLE', 0, self.layout_scheme, p1 = 16, p2 = 5)
+        self.dict_switch['switch_3'] = SwitchLabel('THROTTLE', 1, self.layout_scheme, p1 = 11, p2 = 4)
+        self.dict_switch['switch_4'] = SwitchLabel('IGNITION', 2, self.layout_scheme, p1 = 4, p2 = 13)
+        self.dict_switch['switch_5'] = SwitchLabel('OIL_PUMP', 5, self.layout_scheme, p1 = 20, p2 = 8)
         
         return self.layout_scheme
-          
-                
-    def set_position_dial(self):
-        value = self.dial_waste_gate.value()
-        self.bar_waste_gate.setValue(value)
-        
-        
+                  
     def ButtonLayout (self):
         layout_buttons = QGridLayout()
         dict_buttons = {}
@@ -249,17 +180,17 @@ class Form(QDialog):
         self.timer_auto.blockSignals(True)
         self.dict_switch['switch_1'].switch.setChecked(True)
         self.dict_switch['switch_2'].switch.setChecked(True)
-        self.dict_switch['switch_3'].switch.setChecked(True)
         self.dict_switch['switch_4'].switch.setChecked(True)
-        self.slider_air_throttle.setValue(0)
-        self.slider_gas_valve.setValue(10)
-        self.dial_waste_gate.setValue(0)
+        self.dict_switch['switch_5'].switch.setChecked(True)
+        self.slider_air_throttle.slider.setValue(0)
+        self.slider_gas_valve.slider.setValue(10)
+        self.dial_wastegate.slider.setValue(0)
                 
     def AutoButton (self):
         self.dict_switch['switch_3'].switch.setChecked(True)
         self.dict_switch['switch_4'].switch.setChecked(True)
-        self.slider_gas_valve.setValue(10)
-        self.dial_waste_gate.setValue(0)
+        self.slider_gas_valve.slider.setValue(10)
+        self.slider_wastegate.slider.setValue(0)
         
         self.timer_auto = QTimer()
         self.connect(self.timer_auto, SIGNAL("timeout()"), self.auto_slider_throttle)
@@ -269,65 +200,101 @@ class Form(QDialog):
         self.timer_auto.blockSignals(True)
         
     def StopButton (self):
-
         self.timer_auto.blockSignals(True)
         self.dict_switch['switch_1'].switch.setChecked(True)
         self.dict_switch['switch_2'].switch.setChecked(True)
-        self.dict_switch['switch_3'].switch.setChecked(True)
+        self.dict_switch['switch_3'].switch.setChecked(False)
         self.dict_switch['switch_4'].switch.setChecked(False)
-        self.slider_air_throttle.setValue(0)
-        self.slider_gas_valve.setValue(0)
-        self.dial_waste_gate.setValue(0)
-        
-        
+        self.dict_switch['switch_5'].switch.setChecked(True)
+        self.slider_air_throttle.slider.setValue(0)
+        self.slider_gas_valve.slider.setValue(0)
+        self.slider_wastegate.slider.setValue(0)
+               
     def auto_slider_throttle(self):
         self.dict_switch['switch_3'].switch.setChecked(True)
         self.dict_switch['switch_4'].switch.setChecked(True)
-        if self.slider_air_throttle.value() < 60:
+        if self.slider_air_throttle.slider.value() < 60:
             self.dict_switch['switch_1'].switch.setChecked(True)
             self.dict_switch['switch_2'].switch.setChecked(True)
-            self.dial_waste_gate.setValue(0)
-            position_throttle = self.slider_air_throttle.value()
+            self.slider_wastegate.slider.setValue(0)
+            position_throttle = self.slider_air_throttle.slider.value()
             position_throttle += 1
-            self.slider_air_throttle.setValue(position_throttle)
-        elif self.slider_air_throttle.value() >= 60 and self.slider_air_throttle.value() < 99:
+            self.slider_air_throttle.slider.setValue(position_throttle)
+        elif self.slider_air_throttle.slider.value() >= 60 and self.slider_air_throttle.slider.value() < 99:
             self.dict_switch['switch_1'].switch.setChecked(False)
             self.dict_switch['switch_2'].switch.setChecked(False)
-            self.dial_waste_gate.setValue(0)
-            position_throttle = self.slider_air_throttle.value()
+            self.slider_wastegate.slider.setValue(0)
+            position_throttle = self.slider_air_throttle.slider.value()
             position_throttle += 1
-            self.slider_air_throttle.setValue(position_throttle)
-        elif self.slider_air_throttle.value() == 99:
+            self.slider_air_throttle.slider.setValue(position_throttle)
+        elif self.slider_air_throttle.slider.value() == 99:
             self.dict_switch['switch_1'].switch.setChecked(False)
             self.dict_switch['switch_2'].switch.setChecked(False)
-            possition_dial = self.dial_waste_gate.value()
+            possition_dial = self.slider_wastegate.slider.value()
             possition_dial += 1
-            self.dial_waste_gate.setValue(possition_dial)
-        
-        
+            self.slider_wastegate.slider.setValue(possition_dial)
+                
 class SensorLabel (QDialog):
     
-    def __init__(self, name, unit, mode = 'normal'):
-        self.name = QLabel(name)
+    def __init__(self, name, point, unit, mode = 'normal'):
+        self.name = QLabel(name + ' ' + point)
         self.unit = QLabel(unit)
         hej = QGroupBox() #to delete       
         self.radio = QRadioButton()
         
-        if mode == 'LCD':
+        if name == 'REV_COUNTER':
             self.value = QLCDNumber()
-            self.value.setFixedHeight(30)
+            self.value.setFixedHeight(25)
             self.value.setFixedWidth(50)
             self.value.setNumDigits(4)
         else:
             self.value = QLineEdit()
-            self.value.setFixedWidth(100)
+            self.value.setFixedWidth(60)
             self.value.setText(str(0))
             
+class SliderLabel (QDialog):
+    
+    def __init__(self, name, point, layout, mode = 'slider', direction = Qt.Vertical, p1 = 0, p2 = 0):
+        self.point = point
+        self.layout = layout
+        self.mode = mode
+        self.name = QLabel(name)
+        
+        if self.mode == 'slider':
+            self.slider = QSlider(direction)
+            self.slider_display = QLCDNumber()        
+            self.slider_display.setFixedHeight(30)
+            self.slider_display.setFixedWidth(60)
+            self.slider_display.setNumDigits(2)
+        
+            self.layout.addWidget(self.name, 0, p2, Qt.AlignCenter)
+            self.layout.addWidget(self.slider, 1, p2)
+            self.layout.addWidget(self.slider_display, 2, p2)
             
+        elif self.mode == 'dial':
+            self.slider = QDial()
+            self.slider.setRange(0, 100)
+            self.slider.setFixedHeight(80)            
+            self.slider_display = QProgressBar()
+            self.slider_display.setFixedWidth(150)
+            self.slider_display.setFixedHeight(25)
+            self.slider_display.setValue(0)
+        
+        self.dir = ['Turbine', 'Points', 'P'+str(self.point), name]
+        self.connect(self.slider, SIGNAL("valueChanged(int)"), self.set_position_slider)
+        
+    def set_position_slider(self):
+        value = self.slider.value()
+        if self.mode == 'slider': self.slider_display.display(value)
+        elif self.mode == 'dial': self.slider_display.setValue(value)
+        self.value_dir = client.get_dir(self.dir)
+        client.set_value(self.value_dir, 'value', str(value)) 
+               
 class SwitchLabel (QDialog):
     
-    def __init__(self, layout_scheme, p1 = 0, p2 = 0):
-        
+    def __init__(self, device_name, point, layout, p1 = 0, p2 = 0):
+        self.device_name = device_name
+        self.point = point
         self.switch = QCheckBox()        
         self.label_diodeRed = QLabel('diodeRed')
         self.image_diodeRed = QPixmap('images/diodeRed.png')
@@ -342,22 +309,27 @@ class SwitchLabel (QDialog):
         self.label_diodeGreen.setPixmap(image_diodeGreen)
         self.label_diodeGreen.hide()
         
-        layout_scheme.addWidget(self.label_diodeRed, p1, p2)
-        layout_scheme.addWidget(self.label_diodeGreen, p1, p2)        
-        layout_scheme.addWidget(self.switch, p1, p2 + 1)
+        layout.addWidget(self.label_diodeRed, p1, p2)
+        layout.addWidget(self.label_diodeGreen, p1, p2)        
+        layout.addWidget(self.switch, p1, p2 + 1)
         
+        self.dir = ['Turbine', 'Points', 'P'+str(self.point), self.device_name]       
+        self.connect(self.switch, SIGNAL("toggled(bool)"), self.check)
     
     def check(self):
+        self.value_dir = client.get_dir(self.dir)
         if self.switch.isChecked():
             self.label_diodeGreen.show()
+            client.set_value(self.value_dir, 'value', str(1))
         else:
             self.label_diodeGreen.hide()
+            client.set_value(self.value_dir, 'value', str(0))
             
             
 
+def start_gui():
+    app = QApplication(sys.argv)
 
-app = QApplication(sys.argv)
-
-form = Form()
-form.show()
-app.exec_()
+    form = Form()
+    form.show()
+    app.exec_()

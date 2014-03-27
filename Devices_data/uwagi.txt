@@ -1,0 +1,7 @@
+dla spark i pump sprawdzac czy uzytkownik nie nadal portow 0-3
+# obsluga wyjatkow dla portów. Walidacja pliku wejœciowego. W pliku wejsciowym jest wszystko to co jest wymagane
+Rozwazyc 
+# save time dla czlonow wykonawczych
+# charakterystyka dla serwomechanizmu
+# oddzielny program dla sterowania i charakterystyk serwomechanizmow.
+# sprawdzic na oscyloskopie dlaczego najmniejszy impul porusza zawor o 10%

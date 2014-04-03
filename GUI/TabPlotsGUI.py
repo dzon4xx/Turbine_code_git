@@ -24,7 +24,7 @@ class PlotsTab(QDialog):
         layout_checkBox_down = QGridLayout()
         
         label_logo = QLabel('KNE')
-        self.image_logo = QPixmap('images/kne.png')
+        self.image_logo = QPixmap('GUI/images/kne.png')
         width = self.image_logo.width() * 0.11
         height = self.image_logo.height() * 0.11
         image = self.image_logo.scaled(width, height, Qt.KeepAspectRatio)        

@@ -11,8 +11,9 @@ import time
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 from Settings import *
-import Driver.File_read as File_read
-#from Driver.File_read import File_handler, Data_parser
+import Driver.File_read     as File_read
+import Driver.Data_parse    as Data_parse
+
         
 
 class ManagerGUI(object):
@@ -50,7 +51,7 @@ class ManagerGUI(object):
 
     def load_devices(self, ):
         
-        data_parser     = File_read.Data_parser()
+        data_parser     = Data_parse.Data_parser()
         file_handler    = File_read.File_handler()
      
         gui_path_list   =   DEVICES_PATH + [DEVICES_GUI]      

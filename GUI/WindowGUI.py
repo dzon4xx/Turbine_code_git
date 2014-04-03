@@ -10,6 +10,7 @@ from time import sleep
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
+from multiprocessing import Process
 import numpy as np
 import pyqtgraph as pg
 
@@ -70,7 +71,7 @@ class Form(QDialog):
 
         layout_title = QGridLayout()        
         label_logo = QLabel('KNE')
-        self.image_logo = QPixmap('images/kne.png')
+        self.image_logo = QPixmap('GUI/images/kne.png')
         width = self.image_logo.width() * 0.04
         height = self.image_logo.height() * 0.04
         image = self.image_logo.scaled(width, height, Qt.KeepAspectRatio)        
@@ -124,7 +125,7 @@ class Form(QDialog):
         self.layout_sliders = QGridLayout()
                 
         self.slider_air_throttle = SliderLabel('THROTTLE', 1, self.layout_sliders, p1 = 0, p2 = 0)
-        self.slider_gas_valve = SliderLabel('VALVE', 2, self.layout_sliders, p1 = 0, p2 = 1)
+        self.slider_gas_valve = SliderLabel(GAS_VALVE, 2, self.layout_sliders, p1 = 0, p2 = 1)
         
         return self.layout_sliders
         
@@ -132,7 +133,7 @@ class Form(QDialog):
         self.layout_scheme = QGridLayout()
         label_name = QLabel("Gas Turbine Remote Control") 
         label_scheme = QLabel('scheme')
-        self.image_scheme = QPixmap('images/scheme.png')
+        self.image_scheme = QPixmap('GUI/images/scheme.png')
         width = self.image_scheme.width() * 0.9
         height = self.image_scheme.height() * 0.9
         image = self.image_scheme.scaled(width, height, Qt.KeepAspectRatio)        
@@ -149,11 +150,11 @@ class Form(QDialog):
         self.layout_scheme.addWidget(self.slider_wastegate.slider_display, 5, 15, 3, 6)
                         
         self.dict_switch = {}
-        self.dict_switch['switch_1'] = SwitchLabel('STARTER_FAN', 0, self.layout_scheme, p1 = 16, p2 = 1)
-        self.dict_switch['switch_2'] = SwitchLabel('THROTTLE', 0, self.layout_scheme, p1 = 16, p2 = 5)
-        self.dict_switch['switch_3'] = SwitchLabel('THROTTLE', 1, self.layout_scheme, p1 = 11, p2 = 4)
-        self.dict_switch['switch_4'] = SwitchLabel('IGNITION', 2, self.layout_scheme, p1 = 4, p2 = 13)
-        self.dict_switch['switch_5'] = SwitchLabel('OIL_PUMP', 5, self.layout_scheme, p1 = 20, p2 = 8)
+        self.dict_switch['switch_1'] = SwitchLabel(STARTER_FAN, 0, self.layout_scheme, p1 = 16, p2 = 1)
+        self.dict_switch['switch_2'] = SwitchLabel(AUXILARY_THROTTLE, 0, self.layout_scheme, p1 = 16, p2 = 5)
+        self.dict_switch['switch_3'] = SwitchLabel(MAIN_THROTTLE, 1, self.layout_scheme, p1 = 11, p2 = 4)
+        self.dict_switch['switch_4'] = SwitchLabel(IGNITION, 2, self.layout_scheme, p1 = 4, p2 = 13)
+        self.dict_switch['switch_5'] = SwitchLabel(OIL_PUMP, 5, self.layout_scheme, p1 = 20, p2 = 8)
         
         return self.layout_scheme
                   
@@ -262,7 +263,8 @@ class SliderLabel (QDialog):
         
         if self.mode == 'slider':
             self.slider = QSlider(direction)
-            self.slider_display = QLCDNumber()        
+            self.slider.setRange(0,10)
+            self.slider_display = QLCDNumber()       
             self.slider_display.setFixedHeight(30)
             self.slider_display.setFixedWidth(60)
             self.slider_display.setNumDigits(2)
@@ -280,7 +282,8 @@ class SliderLabel (QDialog):
             self.slider_display.setFixedHeight(25)
             self.slider_display.setValue(0)
         
-        self.dir = ['Turbine', 'Points', 'P'+str(self.point), name]
+        self.dir = ['Mitsubishi_turbine', 'Present', 'Points', 'P'+str(self.point), name]
+        #self.dir = ['Turbine', 'Points', 'P'+str(self.point), name]
         self.connect(self.slider, SIGNAL("valueChanged(int)"), self.set_position_slider)
         
     def set_position_slider(self):
@@ -297,14 +300,14 @@ class SwitchLabel (QDialog):
         self.point = point
         self.switch = QCheckBox()        
         self.label_diodeRed = QLabel('diodeRed')
-        self.image_diodeRed = QPixmap('images/diodeRed.png')
+        self.image_diodeRed = QPixmap('GUI/images/diodeRed.png')
         width = self.image_diodeRed.width() * 0.6
         height = self.image_diodeRed.height() * 0.6
         image_diodeRed = self.image_diodeRed.scaled(width, height, Qt.KeepAspectRatio)        
         self.label_diodeRed.setPixmap(image_diodeRed)
         
         self.label_diodeGreen = QLabel('diodeGreen')
-        self.image_diodeGreen = QPixmap('images/diodeGreen.png')
+        self.image_diodeGreen = QPixmap('GUI/images/diodeGreen.png')
         image_diodeGreen = self.image_diodeGreen.scaled(width, height, Qt.KeepAspectRatio)        
         self.label_diodeGreen.setPixmap(image_diodeGreen)
         self.label_diodeGreen.hide()
@@ -313,7 +316,7 @@ class SwitchLabel (QDialog):
         layout.addWidget(self.label_diodeGreen, p1, p2)        
         layout.addWidget(self.switch, p1, p2 + 1)
         
-        self.dir = ['Turbine', 'Points', 'P'+str(self.point), self.device_name]       
+        self.dir = ['Mitsubishi_turbine', 'Present', 'Points', 'P'+str(self.point), self.device_name]       
         self.connect(self.switch, SIGNAL("toggled(bool)"), self.check)
     
     def check(self):
@@ -324,12 +327,17 @@ class SwitchLabel (QDialog):
         else:
             self.label_diodeGreen.hide()
             client.set_value(self.value_dir, 'value', str(0))
-            
-            
-
-def start_gui():
+                       
+def start_app():
     app = QApplication(sys.argv)
 
     form = Form()
     form.show()
     app.exec_()
+
+def start_gui_process():
+    gui = Process(target=start_app, args=())
+    #gui = threading.Thread(target=WindowGUI.start_app, args=())
+    gui.start()
+
+    gui.join()

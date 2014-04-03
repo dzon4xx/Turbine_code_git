@@ -13,6 +13,7 @@ DEVICES_DATA   =   'devices_data'
 DEVICES_MAP    =   'devices_map'
 DEVICES_CHAR   =   'devices_characteristics'
 DEVICES_GUI    =   'devices_gui'
+LAUNCH_TIME    =   'launch_time'
 DB_HISTORY_DIR =   [turbine_name, 'History']
 DB_PRESENT_DIR =   [turbine_name, 'Present', 'Points']
 
@@ -39,7 +40,7 @@ MAX_CHANNEL = {DIO: 22, AIN: 13, DAC: 2, TIO: 7, CIO: 2, NOT: 1}
 DIGITAL_PULSE, DIGITAL, ANALOG = ['DIGITAL_PULSE', 'DIGITAL', 'ANALOG']
 
 #Settings
-MODE, VALUE, VOFFSET, GAIN, SAVE_TIME     =  'mode', 'value', 'voffset', 'gain', 'save_time'
+MODE, VALUE, VOFFSET, GAIN, FREQ, SAVE_TIME     =  'mode', 'value', 'voffset', 'gain', 'freq', 'save_time'
   
 #start dirs
 

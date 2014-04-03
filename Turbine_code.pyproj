@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{6fcced2f-d5e8-4b51-8dab-68dea55d37af}</ProjectGuid>
     <ProjectHome />
-    <StartupFile>Start.py</StartupFile>
+    <StartupFile>Start_turbine.py</StartupFile>
     <SearchPath />
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
@@ -15,13 +15,14 @@
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'" />
   <PropertyGroup Condition="'$(Configuration)' == 'Release'" />
   <ItemGroup>
+    <Compile Include="Driver\File_read.py" />
     <Compile Include="GUI\WindowGUI.py" />
     <Compile Include="Settings.py" />
-    <Compile Include="Start.py" />
+    <Compile Include="Start_turbine.py" />
     <Content Include="Devices_data\uwagi.txt" />
     <Compile Include="Driver\Database_mana.py" />
     <Compile Include="Driver\Database_manage.py" />
-    <Compile Include="Driver\File_read.py" />
+    <Compile Include="Driver\Data_parse.py" />
     <Compile Include="Driver\Labjack_settings.py" />
     <Compile Include="Driver\Threads_Manager.py" />
     <Compile Include="Driver\Turbine_devices.py" />

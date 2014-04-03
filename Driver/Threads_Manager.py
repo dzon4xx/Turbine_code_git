@@ -11,9 +11,11 @@ class Measure_and_control():
 
     def launch(self, operating_devices):
         print "MEASURE_AND_CONTROL: START"
+        output_devices, input_devices = self.sort_devices(operating_devices)
         db_manager    =   Database_manage.Database_manager()
         db_manager.set_devices_present_dir(operating_devices) 
         db_manager.set_devices_history_dir(operating_devices)
+        db_manager.set_devices_initial_value(output_devices)
             
 
         for device in operating_devices:           
@@ -23,7 +25,18 @@ class Measure_and_control():
         
               
         record_thread = threading.Thread( target = db_manager.record, args= (operating_devices, ) )
-        #record_thread.start()
+        record_thread.start()
+
+    def sort_devices(self, operating_devices):
+        input_devices = []
+        output_devices = []
+        for device in operating_devices:
+            if device.direction == 'OUTPUT':
+                output_devices.append(device)
+            else:
+                input_devices.append(device)
+
+        return output_devices, input_devices
 
 
 class Command():
